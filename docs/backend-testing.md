@@ -4,6 +4,27 @@ This test plan validates that Row Level Security (RLS) and storage isolation wor
 
 ---
 
+## Storage Folder Path Convention (Important for Frontend Uploads)
+
+All uploads to the `case-documents` bucket **MUST** adhere to the following path format:
+
+```text
+<lawyer_id>/<file_name>
+```
+
+- **`<lawyer_id>`**: The Supabase Auth User ID (`auth.uid()`) of the logged-in lawyer.
+- **`<file_name>`**: The unique file identifier / filename (e.g. `doc_<uuid>.pdf` or `<timestamp>_contract.pdf`).
+
+> **Frontend Upload Example:**
+> ```typescript
+> const filePath = `${user.id}/${Date.now()}_${file.name}`;
+> const { data, error } = await supabase.storage
+>   .from('case-documents')
+>   .upload(filePath, file);
+> ```
+
+---
+
 ## Test Setup
 
 1. **User Accounts:**
@@ -46,6 +67,6 @@ This test plan validates that Row Level Security (RLS) and storage isolation wor
 ### 6. Storage Bucket Isolation (`case-documents`)
 - [ ] **Allowed file types:** Uploading `.pdf` and `.docx` succeeds. Uploading `.exe`, `.png`, or other disallowed types is rejected.
 - [ ] **File size limit:** Uploading a file > 10 MB is rejected with an error.
-- [ ] **Read storage object:** Lawyer A can download `case-documents/<UUID_A>/<case_id>/contract.pdf`.
-- [ ] **Cross-tenant read:** Lawyer B attempting to read `case-documents/<UUID_A>/...` receives `403 Forbidden` / 0 rows.
+- [ ] **Read storage object:** Lawyer A can download `case-documents/<UUID_A>/contract.pdf`.
+- [ ] **Cross-tenant read:** Lawyer B attempting to read `case-documents/<UUID_A>/contract.pdf` receives `403 Forbidden` / 0 rows.
 - [ ] **Cross-tenant upload/delete:** Lawyer B attempting to upload or delete an object under `<UUID_A>/...` is denied by RLS.
