@@ -1,5 +1,5 @@
 -- Migration: 20260814000003_storage_setup.sql
--- Description: Create 'case-documents' storage bucket with mime restrictions (PDF, DOCX) and 10MB limit + RLS policies.
+-- Description: Create 'case-documents' storage bucket with mime restrictions (PDF, DOCX) and 10MB limit + simplified RLS policies.
 
 -- 1. Create the storage bucket if it does not already exist
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -16,23 +16,17 @@ ON CONFLICT (id) DO UPDATE SET
     public = false;
 
 -- 2. Storage RLS Policies for case-documents bucket
--- Folder path convention: <lawyer_id>/<case_id>/<file_name> or verification via lawyer_id = auth.uid()
+-- Standardized folder path convention: <lawyer_id>/<file_name>
+-- Enforces that a lawyer can only view, upload, update, and delete files inside their own top-level folder (<auth.uid()>/*).
 
--- Allow authenticated users to view files in their own folder or linked to their lawyer_id
+-- Allow authenticated users to view files in their own folder
 CREATE POLICY "Lawyers can view own case documents in storage"
     ON storage.objects
     FOR SELECT
     TO authenticated
     USING (
         bucket_id = 'case-documents'
-        AND (
-            (storage.foldername(name))[1] = auth.uid()::text
-            OR EXISTS (
-                SELECT 1 FROM public.cases
-                WHERE cases.id::text = (storage.foldername(name))[2]
-                  AND cases.lawyer_id = auth.uid()
-            )
-        )
+        AND (storage.foldername(name))[1] = auth.uid()::text
     );
 
 -- Allow authenticated users to upload files to their own folder
