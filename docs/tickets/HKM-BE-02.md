@@ -14,17 +14,20 @@
 
 ## 1. الهدف والسياق (Description & Context)
 إنشاء وترحيل مخطط قاعدة البيانات PostgreSQL على Supabase يشمل كافة الجداول المحددة في ملف ERD:
-(`profiles`, `clients`, `cases`, `documents`, `time_entries`, `invoices`, `invoice_items`) مع العلاقات والمفاتيح الأجنبية والفهارس.
+(`profiles`, `clients`, `cases`, `documents`, `time_entries`, `invoices`, `invoice_items`).
+مع دعم نوعي المستخدمين (محامي `lawyer` / عميل طالب خدمة `client`) في جدول `profiles` وتجهيز Database Trigger لإنشاء الـ Profile تلقائياً عند التسجيل من `auth.users`.
 
 ## 2. الملفات والمكونات المستهدفة (Target Components & Files)
 - `supabase/migrations/20260816000001_initial_schema.sql`
 - `types/database.types.ts`
 
 ## 3. معايير القبول الإلزامية (Acceptance Criteria - AC)
-- [ ] إنشاء جميع الجداول السبعة مع الحقول المحددة في `docs/erd.md`.
+- [ ] إنشاء جدول `profiles` مع حقل `role` (`'lawyer'` | `'client'`) والحقول الخاصة بكل دور (`bar_association_number`, `office_address`, `phone_number`).
+- [ ] إنشاء Trigger في PostgreSQL على `auth.users` لإنشاء صف `profiles` تلقائياً مع الـ `role` الممرر في `raw_user_meta_data`.
+- [ ] إنشاء باقي الجداول الستة مع الحقول المحددة في `docs/erd.md`.
 - [ ] ضبط الـ Foreign Keys والـ Cascading Rules بدقة.
 - [ ] توليد ملف أنواع TypeScript المحدث (`database.types.ts`).
-- [ ] إضافة فهارس (Indexes) على الأعمدة الأكثر استخداماً (`user_id`, `client_id`, `case_id`).
+- [ ] إضافة فهارس (Indexes) على الأعمدة الأكثر استخداماً (`user_id`, `client_id`, `case_id`, `role`).
 
 ## 4. متطلبات التفاعل والحالات / القيود (UX / Technical Invariants)
 - **Default / Success:** ترحيل الـ SQL بنجاح محلياً وعلى Supabase Remote بدون أي خطأ.
