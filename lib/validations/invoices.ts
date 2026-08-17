@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const invoiceStatusEnum = z.enum(['draft', 'sent', 'paid'], {
-  errorMap: () => ({ message: 'حالة الفاتورة غير صالحة (draft, sent, paid)' }),
+  message: 'حالة الفاتورة غير صالحة (draft, sent, paid)',
 });
 
 export const createInvoiceSchema = z.object({

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const caseStatusEnum = z.enum(['active', 'pending', 'closed'], {
-  errorMap: () => ({ message: 'حالة القضية غير صالحة (active, pending, closed)' }),
+  message: 'حالة القضية غير صالحة (active, pending, closed)',
 });
 
 export const createCaseSchema = z.object({
