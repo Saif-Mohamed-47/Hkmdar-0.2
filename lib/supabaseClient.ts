@@ -50,35 +50,18 @@ export async function signUpUser(params: SignUpParams) {
         role,
         full_name: fullName,
         phone,
+        phone_number: phone,
         bar_number: barNumber || null,
+        bar_association_number: barNumber || null,
         specialty: specialty || null,
         location: location || 'القاهرة',
+        office_address: location || 'القاهرة',
         created_at: new Date().toISOString(),
       },
     },
   });
 
   if (error) {
-    // If not configured, we provide simulated success for demo purposes if it was a network failure to placeholder
-    if (!isSupabaseConfigured && (error.message.includes('FetchError') || error.message.includes('Failed to fetch') || error.message.includes('Invalid API key') || error.status === 401 || error.status === 400)) {
-      return {
-        user: {
-          id: `user-${Date.now()}`,
-          email,
-          user_metadata: {
-            role,
-            full_name: fullName,
-            phone,
-            bar_number: barNumber,
-            specialty,
-            location,
-          },
-        },
-        session: null,
-        error: null,
-        isDemo: true,
-      };
-    }
     return { user: null, session: null, error, isDemo: false };
   }
 
@@ -97,25 +80,6 @@ export async function signInUser(params: SignInParams) {
   });
 
   if (error) {
-    // Fallback demo simulation if Supabase credentials are placeholders
-    if (!isSupabaseConfigured && (error.message.includes('FetchError') || error.message.includes('Failed to fetch') || error.message.includes('Invalid API key') || error.status === 401 || error.status === 400)) {
-      const isLawyer = email.includes('lawyer') || email.includes('tarek') || email.includes('kadi');
-      return {
-        user: {
-          id: isLawyer ? 'lawyer-demo-1' : 'client-demo-1',
-          email,
-          user_metadata: {
-            role: isLawyer ? ('lawyer' as UserRole) : ('client' as UserRole),
-            full_name: isLawyer ? 'المستشار / طارق عبد العزيز القاضي' : 'أحمد إبراهيم منصور',
-            phone: isLawyer ? '+20 100 234 5678' : '+20 102 334 9988',
-            bar_number: isLawyer ? 'EG-BAR-104928' : undefined,
-          },
-        },
-        session: null,
-        error: null,
-        isDemo: true,
-      };
-    }
     return { user: null, session: null, error, isDemo: false };
   }
 

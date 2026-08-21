@@ -1,10 +1,10 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/lib/context/AppContext';
-import { UserRole, LegalCategory } from '@/lib/types';
+import { UserRole, LegalCategory, User } from '@/lib/types';
 import { LEGAL_CATEGORIES_INFO } from '@/lib/data/legalData';
 import { signUpUser, signInUser } from '@/lib/supabaseClient';
 import { loginSchema, registerSchema, RegisterFormData } from '@/lib/validations/authSchemas';
@@ -12,7 +12,7 @@ import RoleSelector from './RoleSelector';
 import {
   Mail,
   Lock,
-  User,
+  User as UserIcon,
   Phone,
   Eye,
   EyeOff,
@@ -63,12 +63,12 @@ function Field({
 
 const inputBase =
   'w-full py-2.5 rounded-xl bg-slate-800/80 border text-sm text-white placeholder:text-slate-500 focus:outline-none transition-all duration-200 focus:ring-1';
-const inputOk = 'border-slate-700 focus:border-emerald-500 focus:ring-emerald-500/20';
+const inputOk = 'border-slate-700 focus:border-blue-500 focus:ring-blue-500/20';
 const inputErr = 'border-rose-500/70 focus:border-rose-500 focus:ring-rose-500/20';
 
 export default function AuthForm({ mode, defaultRole = 'client' }: AuthFormProps) {
   const router = useRouter();
-  const { setRole: setAppRole, addToast } = useApp();
+  const { setRole: setAppRole, addToast, setUser: setAppUser } = useApp();
 
   const [role, setSelectedRole] = useState<UserRole>(defaultRole);
   const [fullName, setFullName] = useState('');
@@ -94,10 +94,10 @@ export default function AuthForm({ mode, defaultRole = 'client' }: AuthFormProps
     setServerError(null);
     if (mode === 'login') {
       if (targetRole === 'lawyer') {
-        setEmail('tarek.kadi@hakmdar-law.eg');
+        setEmail('email@example.com');
         setPassword('lawyer123456');
       } else {
-        setEmail('ahmed.mansour@example.com');
+        setEmail('email@example.com');
         setPassword('client123456');
       }
     } else {
@@ -152,7 +152,7 @@ export default function AuthForm({ mode, defaultRole = 'client' }: AuthFormProps
           title: 'تم تسجيل الدخول بنجاح ✓',
           message: resolvedRole === 'lawyer' ? 'مرحباً بك في بوابة المحامي الرقمية' : 'مرحباً بك في بوابة الاستشارات القانونية',
         });
-        router.push(resolvedRole === 'lawyer' ? '/lawyer/dashboard' : '/client/dashboard');
+        router.push(resolvedRole === 'lawyer' ? '/dashboard' : '/client/dashboard');
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'حدث خطأ غير متوقع أثناء الاتصال بالخادم';
         setServerError(msg);
@@ -185,7 +185,7 @@ export default function AuthForm({ mode, defaultRole = 'client' }: AuthFormProps
 
       setIsLoading(true);
       try {
-        const { error } = await signUpUser({
+        const { user: newUser, session, error } = await signUpUser({
           email,
           password,
           role,
@@ -201,13 +201,38 @@ export default function AuthForm({ mode, defaultRole = 'client' }: AuthFormProps
           addToast({ type: 'error', title: 'تعذر إنشاء الحساب', message: msg });
           return;
         }
+
+        // Email confirmation required — session will be null
+        if (!session) {
+          addToast({
+            type: 'info',
+            title: 'تحقق من بريدك الإلكتروني 📧',
+            message: 'تم إنشاء حسابك بنجاح. يرجى فتح رسالة التأكيد المُرسلة إلى بريدك لتفعيل الحساب.',
+          });
+          router.push(`/auth/verify?email=${encodeURIComponent(email)}`);
+          return;
+        }
+
+        // Session exists — update context with real user data immediately
+        const meta = newUser?.user_metadata || {};
+        const realUser: User = {
+          id: newUser?.id || '',
+          name: meta.full_name || fullName,
+          email: newUser?.email || email,
+          phone: meta.phone || phone,
+          role,
+          location: meta.location || location,
+          barNumber: meta.bar_number || barNumber,
+          specialty: meta.specialty || specialty,
+        };
+        setAppUser(realUser);
         setAppRole(role);
         addToast({
           type: 'success',
           title: 'تم إنشاء الحساب بنجاح ✓',
-          message: role === 'lawyer' ? 'أهلاً بك زميلنا العزيز في منصة حُكمدار للمحامين' : 'تم تجهيز حسابك بنجاح. أهلاً بك في حُكمدار',
+          message: role === 'lawyer' ? 'أهلاً بك زميلنا العزيز في منصة حكمدار للمحامين' : 'تم تجهيز حسابك بنجاح. أهلاً بك في حكمدار',
         });
-        router.push(role === 'lawyer' ? '/lawyer/dashboard' : '/client/dashboard');
+        router.push(role === 'lawyer' ? '/dashboard' : '/client/dashboard');
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'حدث خطأ غير متوقع أثناء إنشاء الحساب';
         setServerError(msg);
@@ -250,7 +275,7 @@ export default function AuthForm({ mode, defaultRole = 'client' }: AuthFormProps
               <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                 {mode === 'login'
                   ? 'أدخل بريدك وكلمة المرور للوصول إلى حسابك'
-                  : 'اختر نوع حسابك وأدخل بياناتك للانضمام إلى حُكمدار'}
+                  : 'اختر نوع حسابك وأدخل بياناتك للانضمام إلى حكمدار'}
               </p>
             </div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/80 border border-white/5 text-[10px] font-medium text-slate-400">
@@ -290,7 +315,7 @@ export default function AuthForm({ mode, defaultRole = 'client' }: AuthFormProps
                 {/* Full name */}
                 <Field label="الاسم بالكامل" required error={errors.fullName}>
                   <div className="relative">
-                    <User className="w-4 h-4 text-slate-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <UserIcon className="w-4 h-4 text-slate-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
                       placeholder={isLawyer ? 'المستشار / طارق عبد العزيز' : 'أحمد إبراهيم منصور'}
@@ -320,68 +345,70 @@ export default function AuthForm({ mode, defaultRole = 'client' }: AuthFormProps
 
                 {/* Lawyer credentials panel */}
                 {isLawyer && (
-                  <div className="rounded-2xl bg-amber-950/20 border border-amber-500/25 p-4 space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Award className="w-4 h-4 text-amber-400" />
-                      <span className="text-xs font-bold text-amber-300">
-                        بيانات الاعتماد المهني بنقابة المحامين
-                      </span>
+                  <>
+                    <div className="rounded-2xl bg-amber-950/20 border border-amber-500/25 p-4 space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Award className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-bold text-amber-300">
+                          بيانات الاعتماد المهني بنقابة المحامين
+                        </span>
+                      </div>
+
+                      <Field label="رقم القيد بالنقابة" required error={errors.barNumber}>
+                        <div className="relative">
+                          <Building2 className="w-4 h-4 text-amber-400/60 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          <input
+                            type="text"
+                            placeholder="EG-BAR-104928"
+                            value={barNumber}
+                            onChange={(e) => { setBarNumber(e.target.value); clearErr('barNumber'); }}
+                            disabled={isLoading}
+                            className={`${inputBase} ${
+                              errors.barNumber
+                                ? inputErr
+                                : 'border-amber-500/30 focus:border-amber-400 focus:ring-amber-400/20'
+                            } pr-10 pl-3`}
+                          />
+                        </div>
+                      </Field>
+
+                      <Field label="التخصص القانوني الرئيسي">
+                        <select
+                          value={specialty}
+                          onChange={(e) => setSpecialty(e.target.value as LegalCategory)}
+                          disabled={isLoading}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-amber-500/30 text-sm text-white focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/20 transition-all duration-200"
+                        >
+                          {(Object.keys(LEGAL_CATEGORIES_INFO) as LegalCategory[]).map((k) => (
+                            <option key={k} value={k}>
+                              {LEGAL_CATEGORIES_INFO[k].labelAr}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
                     </div>
 
-                    <Field label="رقم القيد بالنقابة" required error={errors.barNumber}>
+                    {/* Location (Lawyer only) */}
+                    <Field label="المحافظة / النطاق الجغرافي للمكتب">
                       <div className="relative">
-                        <Building2 className="w-4 h-4 text-amber-400/60 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <input
-                          type="text"
-                          placeholder="EG-BAR-104928"
-                          value={barNumber}
-                          onChange={(e) => { setBarNumber(e.target.value); clearErr('barNumber'); }}
+                        <MapPin className="w-4 h-4 text-slate-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <select
+                          value={location}
+                          onChange={(e) => setLocation(e.target.value)}
                           disabled={isLoading}
-                          className={`${inputBase} ${
-                            errors.barNumber
-                              ? inputErr
-                              : 'border-amber-500/30 focus:border-amber-400 focus:ring-amber-400/20'
-                          } pr-10 pl-3`}
-                        />
+                          className={`${inputBase} ${inputOk} pr-10 pl-3`}
+                        >
+                          <option value="القاهرة">القاهرة</option>
+                          <option value="الجيزة">الجيزة</option>
+                          <option value="الإسكندرية">الإسكندرية</option>
+                          <option value="المنصورة والدقهلية">المنصورة والدقهلية</option>
+                          <option value="طنطا والغربية">طنطا والغربية</option>
+                          <option value="أسيوط والصعيد">أسيوط والصعيد</option>
+                        </select>
                       </div>
                     </Field>
-
-                    <Field label="التخصص القانوني الرئيسي">
-                      <select
-                        value={specialty}
-                        onChange={(e) => setSpecialty(e.target.value as LegalCategory)}
-                        disabled={isLoading}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-amber-500/30 text-sm text-white focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/20 transition-all duration-200"
-                      >
-                        {(Object.keys(LEGAL_CATEGORIES_INFO) as LegalCategory[]).map((k) => (
-                          <option key={k} value={k}>
-                            {LEGAL_CATEGORIES_INFO[k].labelAr}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
-                  </div>
+                  </>
                 )}
-
-                {/* Location */}
-                <Field label="المحافظة / النطاق الجغرافي">
-                  <div className="relative">
-                    <MapPin className="w-4 h-4 text-slate-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <select
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      disabled={isLoading}
-                      className={`${inputBase} ${inputOk} pr-10 pl-3`}
-                    >
-                      <option value="القاهرة">القاهرة</option>
-                      <option value="الجيزة">الجيزة</option>
-                      <option value="الإسكندرية">الإسكندرية</option>
-                      <option value="المنصورة والدقهلية">المنصورة والدقهلية</option>
-                      <option value="طنطا والغربية">طنطا والغربية</option>
-                      <option value="أسيوط والصعيد">أسيوط والصعيد</option>
-                    </select>
-                  </div>
-                </Field>
 
                 {/* Section divider */}
                 <div className="relative flex items-center gap-3">
@@ -520,38 +547,6 @@ export default function AuthForm({ mode, defaultRole = 'client' }: AuthFormProps
             </button>
           </form>
 
-          {/* Quick Demo box */}
-          <div className="rounded-2xl bg-slate-800/40 border border-white/5 p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-[11px] font-bold text-slate-300">
-                تجربة سريعة — Demo Quick Access
-              </span>
-            </div>
-            <p className="text-[10px] text-slate-500 leading-relaxed">
-              انقر لتعبئة بيانات حساب تجريبي واختبار توجيه الأدوار مباشرةً:
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickFill('client')}
-                id="demo-client-btn"
-                className="px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[11px] font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <span>👤</span>
-                <span>حساب عميل</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickFill('lawyer')}
-                id="demo-lawyer-btn"
-                className="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-[11px] font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <span>👨‍⚖️</span>
-                <span>حساب محامٍ</span>
-              </button>
-            </div>
-          </div>
 
           {/* Switch mode link */}
           <p className="text-center text-xs text-slate-500 pt-1 border-t border-white/5">

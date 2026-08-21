@@ -33,7 +33,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
-      <body className="min-h-screen bg-[#070D1E] text-slate-100 flex flex-col font-sans antialiased selection:bg-emerald-500 selection:text-white">
+      <body className="min-h-screen bg-[#070D1E] text-slate-100 flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white">
         <AppProvider>
           {children}
           <ToastContainer />

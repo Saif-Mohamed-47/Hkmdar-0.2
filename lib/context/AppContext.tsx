@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole, CaseIntake, LawyerProfile, CaseStatus } from '../types';
 import { MOCK_LAWYERS } from '../data/lawyersData';
 import { INITIAL_CASES } from '../data/initialCases';
+import { supabase } from '../supabaseClient';
 
 interface ToastNotification {
   id: string;
@@ -17,6 +18,7 @@ interface AppContextType {
   role: UserRole;
   user: User;
   setRole: (role: UserRole) => void;
+  setUser: (user: User) => void;
   cases: CaseIntake[];
   lawyers: LawyerProfile[];
   selectedLawyerId: string;
@@ -75,6 +77,61 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedLawyerId, setSelectedLawyerId] = useState<string>('lawyer-1');
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [user, setUser] = useState<User>(DEFAULT_CLIENT_USER);
+
+  // Sync Supabase Auth Session
+  useEffect(() => {
+    const syncSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const meta = session.user.user_metadata;
+        const resolvedRole = (meta.role as UserRole) || 'client';
+        setRoleState(resolvedRole);
+        setUser({
+          id: session.user.id,
+          name: meta.full_name || meta.name || session.user.email || 'مستخدم',
+          email: session.user.email || '',
+          phone: meta.phone || meta.phone_number || '',
+          role: resolvedRole,
+          location: meta.location || meta.office_address || '',
+          barNumber: meta.bar_number || meta.bar_association_number || '',
+          specialty: meta.specialty || '',
+          avatar: meta.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
+        });
+      } else {
+        const savedRole = localStorage.getItem(LOCAL_STORAGE_ROLE_KEY) as UserRole;
+        const activeRole = savedRole || role;
+        setUser(activeRole === 'lawyer' ? DEFAULT_LAWYER_USER : DEFAULT_CLIENT_USER);
+      }
+    };
+
+    syncSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const meta = session.user.user_metadata;
+        const resolvedRole = (meta.role as UserRole) || 'client';
+        setRoleState(resolvedRole);
+        setUser({
+          id: session.user.id,
+          name: meta.full_name || meta.name || session.user.email || 'مستخدم',
+          email: session.user.email || '',
+          phone: meta.phone || meta.phone_number || '',
+          role: resolvedRole,
+          location: meta.location || meta.office_address || '',
+          barNumber: meta.bar_number || meta.bar_association_number || '',
+          specialty: meta.specialty || '',
+          avatar: meta.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
+        });
+      } else {
+        setUser(role === 'lawyer' ? DEFAULT_LAWYER_USER : DEFAULT_CLIENT_USER);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [role]);
 
   // Hydrate from localStorage
   useEffect(() => {
@@ -110,6 +167,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (typeof window !== 'undefined') {
       localStorage.setItem(LOCAL_STORAGE_ROLE_KEY, newRole);
     }
+    // Also update mock user if no Supabase session is active
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        setUser(newRole === 'lawyer' ? DEFAULT_LAWYER_USER : DEFAULT_CLIENT_USER);
+      }
+    });
     addToast({
       type: 'info',
       title: newRole === 'lawyer' ? 'تم التبديل إلى بوابة المحامي' : 'تم التبديل إلى بوابة الموكل',
@@ -212,7 +275,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const activeLawyer = lawyers.find((l) => l.id === selectedLawyerId) || lawyers[0];
-  const user = role === 'lawyer' ? DEFAULT_LAWYER_USER : DEFAULT_CLIENT_USER;
   const isRTL = lang === 'ar';
 
   return (
@@ -221,6 +283,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         role,
         user,
         setRole,
+        setUser,
         cases,
         lawyers,
         selectedLawyerId,
