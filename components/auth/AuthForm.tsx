@@ -229,9 +229,10 @@ export default function AuthForm({ mode, defaultRole = 'client' }: AuthFormProps
 
         // Session exists — update context with real user data immediately
         const meta = newUser?.user_metadata || {};
+        const savedUserName = meta.full_name || fullName || email.split('@')[0];
         const realUser: User = {
-          id: newUser?.id || '',
-          name: meta.full_name || fullName,
+          id: newUser?.id || `usr_${Date.now()}`,
+          name: savedUserName,
           email: newUser?.email || email,
           phone: meta.phone || phone,
           role,
@@ -250,7 +251,8 @@ export default function AuthForm({ mode, defaultRole = 'client' }: AuthFormProps
           title: 'تم إنشاء الحساب بنجاح ✓',
           message: role === 'lawyer' ? 'أهلاً بك زميلنا العزيز في منصة حكمدار للمحامين' : 'تم تجهيز حسابك بنجاح. أهلاً بك في حكمدار',
         });
-        router.push(role === 'lawyer' ? '/dashboard' : '/client/dashboard');
+        window.location.href = role === 'lawyer' ? '/dashboard' : '/client/dashboard';
+        return;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'حدث خطأ غير متوقع أثناء إنشاء الحساب';
         setServerError(msg);
