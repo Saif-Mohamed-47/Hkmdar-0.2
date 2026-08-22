@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
-import { createCaseSchema } from '@/lib/validations/cases';
+import { createClientSchema } from '@/lib/validations/clients';
+import { Client } from '@/types/database';
 
 /**
- * GET /api/cases
- * List cases belonging to the authenticated lawyer with client info.
+ * GET /api/clients
+ * Fetch clients belonging to the authenticated lawyer.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -19,8 +20,8 @@ export async function GET(req: NextRequest) {
     }
 
     const { data, error } = await supabase
-      .from('cases')
-      .select('*, clients(*)')
+      .from('clients')
+      .select('*')
       .eq('lawyer_id', user.id)
       .order('created_at', { ascending: false });
 
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json(data, { status: 200 });
+    return NextResponse.json(data as Client[], { status: 200 });
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message || 'Internal Server Error' },
@@ -41,8 +42,8 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * POST /api/cases
- * Create a new case linked to a client.
+ * POST /api/clients
+ * Create a new client for the authenticated lawyer.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const parsed = createCaseSchema.safeParse(body);
+    const parsed = createClientSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.issues[0]?.message || 'بيانات غير صالحة' },
@@ -74,20 +75,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Explicitly set lawyer_id from authenticated user and ignore body lawyer_id
-    const newCasePayload = {
+    // Always set lawyer_id from the authenticated user ID and ignore any lawyer_id in request body
+    const newClientPayload = {
       lawyer_id: user.id,
-      client_id: parsed.data.client_id,
-      title: parsed.data.title,
-      status: parsed.data.status,
-      case_number: parsed.data.case_number || null,
-      court: parsed.data.court || null,
-      description: parsed.data.description || null,
+      name: parsed.data.name,
+      email: parsed.data.email || null,
+      phone: parsed.data.phone || null,
+      address: parsed.data.address || null,
     };
 
     const { data, error } = await supabase
-      .from('cases')
-      .insert(newCasePayload)
+      .from('clients')
+      .insert(newClientPayload)
       .select()
       .single();
 
@@ -98,7 +97,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json(data, { status: 201 });
+    return NextResponse.json(data as Client, { status: 201 });
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message || 'Internal Server Error' },

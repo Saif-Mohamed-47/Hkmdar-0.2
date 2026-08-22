@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
-import { createCaseSchema } from '@/lib/validations/cases';
+import { createTimeEntrySchema } from '@/lib/validations/time-entries';
 
 /**
- * GET /api/cases
- * List cases belonging to the authenticated lawyer with client info.
+ * GET /api/time-entries
+ * Return time entries belonging to the authenticated lawyer.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -19,10 +19,10 @@ export async function GET(req: NextRequest) {
     }
 
     const { data, error } = await supabase
-      .from('cases')
-      .select('*, clients(*)')
+      .from('time_entries')
+      .select('*, cases(*)')
       .eq('lawyer_id', user.id)
-      .order('created_at', { ascending: false });
+      .order('date', { ascending: false });
 
     if (error) {
       return NextResponse.json(
@@ -41,8 +41,8 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * POST /api/cases
- * Create a new case linked to a client.
+ * POST /api/time-entries
+ * Log a new time entry for a case.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const parsed = createCaseSchema.safeParse(body);
+    const parsed = createTimeEntrySchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.issues[0]?.message || 'بيانات غير صالحة' },
@@ -74,20 +74,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Explicitly set lawyer_id from authenticated user and ignore body lawyer_id
-    const newCasePayload = {
+    // Set lawyer_id strictly from authenticated user ID
+    const newTimeEntryPayload = {
       lawyer_id: user.id,
-      client_id: parsed.data.client_id,
-      title: parsed.data.title,
-      status: parsed.data.status,
-      case_number: parsed.data.case_number || null,
-      court: parsed.data.court || null,
-      description: parsed.data.description || null,
+      case_id: parsed.data.case_id,
+      description: parsed.data.description,
+      duration_minutes: parsed.data.duration_minutes,
+      hourly_rate: parsed.data.hourly_rate,
+      date: parsed.data.date,
     };
 
     const { data, error } = await supabase
-      .from('cases')
-      .insert(newCasePayload)
+      .from('time_entries')
+      .insert(newTimeEntryPayload)
       .select()
       .single();
 

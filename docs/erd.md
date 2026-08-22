@@ -19,12 +19,16 @@
 ## Tables & Fields
 
 ### 1. `profiles`
-Stores lawyer profile information linked 1:1 with Supabase Auth users.
-- `id` (uuid, PK, references `auth.users.id`)
+Stores profile information for all platform users (both Lawyers and Customers/Clients) linked 1:1 with Supabase Auth users.
+- `id` (uuid, PK, references `auth.users.id` ON DELETE CASCADE)
+- `role` (text, NOT NULL, CHECK role IN ('lawyer', 'client'), DEFAULT 'lawyer')
 - `full_name` (text, NOT NULL)
-- `bar_association_number` (text)
-- `office_address` (text)
+- `phone_number` (text)
+- `bar_association_number` (text, NULL for clients)
+- `office_address` (text, NULL for clients)
+- `avatar_url` (text)
 - `created_at` (timestamptz, DEFAULT now())
+- `updated_at` (timestamptz, DEFAULT now())
 
 ### 2. `clients`
 Stores client details for the practitioner.

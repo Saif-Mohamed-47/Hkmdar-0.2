@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
-import { createCaseSchema } from '@/lib/validations/cases';
+import { updateCaseSchema } from '@/lib/validations/cases';
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
 
 /**
- * GET /api/cases
- * List cases belonging to the authenticated lawyer with client info.
+ * GET /api/cases/[id]
+ * Fetch single case with associated client, documents, time_entries, and invoices.
  */
-export async function GET(req: NextRequest) {
+export async function GET(req: NextRequest, { params }: Props) {
   try {
+    const { id } = await params;
+    if (!id) {
+      return NextResponse.json({ error: 'معرف القضية مطلوب' }, { status: 400 });
+    }
+
     const supabase = createServerClient(req);
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -20,14 +29,15 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await supabase
       .from('cases')
-      .select('*, clients(*)')
+      .select('*, clients(*), documents(*), time_entries(*), invoices(*)')
+      .eq('id', id)
       .eq('lawyer_id', user.id)
-      .order('created_at', { ascending: false });
+      .single();
 
-    if (error) {
+    if (error || !data) {
       return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
+        { error: error?.message || 'القضية غير موجودة' },
+        { status: 404 }
       );
     }
 
@@ -41,11 +51,16 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * POST /api/cases
- * Create a new case linked to a client.
+ * PUT /api/cases/[id]
+ * Update case details or status.
  */
-export async function POST(req: NextRequest) {
+export async function PUT(req: NextRequest, { params }: Props) {
   try {
+    const { id } = await params;
+    if (!id) {
+      return NextResponse.json({ error: 'معرف القضية مطلوب' }, { status: 400 });
+    }
+
     const supabase = createServerClient(req);
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -66,7 +81,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const parsed = createCaseSchema.safeParse(body);
+    const parsed = updateCaseSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.issues[0]?.message || 'بيانات غير صالحة' },
@@ -74,31 +89,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Explicitly set lawyer_id from authenticated user and ignore body lawyer_id
-    const newCasePayload = {
-      lawyer_id: user.id,
-      client_id: parsed.data.client_id,
-      title: parsed.data.title,
-      status: parsed.data.status,
-      case_number: parsed.data.case_number || null,
-      court: parsed.data.court || null,
-      description: parsed.data.description || null,
-    };
+    // Strip lawyer_id and client_id to prevent ownership/relationship manipulation
+    const { lawyer_id: _, client_id: __, ...updateData } = parsed.data as any;
 
     const { data, error } = await supabase
       .from('cases')
-      .insert(newCasePayload)
+      .update(updateData)
+      .eq('id', id)
+      .eq('lawyer_id', user.id)
       .select()
       .single();
 
-    if (error) {
+    if (error || !data) {
       return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
+        { error: error?.message || 'تعذر تعديل بيانات القضية' },
+        { status: error?.code === 'PGRST116' ? 404 : 500 }
       );
     }
 
-    return NextResponse.json(data, { status: 201 });
+    return NextResponse.json(data, { status: 200 });
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message || 'Internal Server Error' },
