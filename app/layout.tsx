@@ -29,11 +29,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ar" dir="rtl" className={`${cairo.variable} ${inter.variable} h-full`}>
+    <html lang="ar" dir="rtl" className={`${cairo.variable} ${inter.variable} h-full`} suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
-      <body className="min-h-screen bg-[#070D1E] text-slate-100 flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white">
+      <body 
+        className="min-h-screen bg-[#070D1E] text-slate-100 flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white"
+        suppressHydrationWarning
+      >
         <AppProvider>
           {children}
           <ToastContainer />
