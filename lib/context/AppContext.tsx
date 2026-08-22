@@ -83,6 +83,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const syncSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      const localUserData = localStorage.getItem('hakmdar_user_data_v1');
+
       if (session?.user) {
         const meta = session.user.user_metadata;
         const resolvedRole = (meta.role as UserRole) || 'client';
@@ -98,6 +100,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           specialty: meta.specialty || '',
           avatar: meta.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
         });
+      } else if (localUserData) {
+        try {
+          const parsed = JSON.parse(localUserData);
+          setUser(parsed);
+          setRoleState(parsed.role || 'client');
+        } catch {
+          setUser(DEFAULT_CLIENT_USER);
+        }
       } else {
         const savedRole = localStorage.getItem(LOCAL_STORAGE_ROLE_KEY) as UserRole;
         const activeRole = savedRole || role;
@@ -124,6 +134,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           avatar: meta.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
         });
       } else {
+        const localUserData = localStorage.getItem('hakmdar_user_data_v1');
+        if (localUserData) {
+          try {
+            const parsed = JSON.parse(localUserData);
+            setUser(parsed);
+            setRoleState(parsed.role || 'client');
+            return;
+          } catch {}
+        }
         setUser(role === 'lawyer' ? DEFAULT_LAWYER_USER : DEFAULT_CLIENT_USER);
       }
     });

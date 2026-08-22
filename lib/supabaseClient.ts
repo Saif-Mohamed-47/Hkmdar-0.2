@@ -41,31 +41,55 @@ export interface SignInParams {
 export async function signUpUser(params: SignUpParams) {
   const { email, password, role, fullName, phone, barNumber, specialty, location } = params;
 
-  // Supabase Auth signUp with metadata in options.data
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        role,
-        full_name: fullName,
-        phone,
-        phone_number: phone,
-        bar_number: barNumber || null,
-        bar_association_number: barNumber || null,
-        specialty: specialty || null,
-        location: location || 'القاهرة',
-        office_address: location || 'القاهرة',
-        created_at: new Date().toISOString(),
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          role,
+          full_name: fullName,
+          phone,
+          phone_number: phone,
+          bar_number: barNumber || null,
+          bar_association_number: barNumber || null,
+          specialty: specialty || null,
+          location: location || 'القاهرة',
+          office_address: location || 'القاهرة',
+          created_at: new Date().toISOString(),
+        },
       },
-    },
-  });
+    });
 
-  if (error) {
-    return { user: null, session: null, error, isDemo: false };
+    if (error) {
+      // If network/domain fails or dummy credentials, fallback to demo local session
+      if (error.message?.includes('fetch') || error.message?.includes('network') || !isSupabaseConfigured) {
+        return createMockUser(params);
+      }
+      return { user: null, session: null, error, isDemo: false };
+    }
+
+    return { user: data.user, session: data.session, error: null, isDemo: false };
+  } catch (err: any) {
+    return createMockUser(params);
   }
+}
 
-  return { user: data.user, session: data.session, error: null, isDemo: false };
+function createMockUser(params: SignUpParams) {
+  const mockUser = {
+    id: `usr_${Date.now()}`,
+    email: params.email,
+    user_metadata: {
+      role: params.role,
+      full_name: params.fullName,
+      phone: params.phone,
+      phone_number: params.phone,
+      bar_number: params.barNumber || null,
+      specialty: params.specialty || null,
+      location: params.location || 'القاهرة',
+    },
+  };
+  return { user: mockUser as any, session: { user: mockUser } as any, error: null, isDemo: true };
 }
 
 /**
@@ -74,16 +98,41 @@ export async function signUpUser(params: SignUpParams) {
 export async function signInUser(params: SignInParams) {
   const { email, password } = params;
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  if (error) {
-    return { user: null, session: null, error, isDemo: false };
+    if (error) {
+      if (error.message?.includes('fetch') || error.message?.includes('network') || !isSupabaseConfigured) {
+        const mockRole: UserRole = email.includes('lawyer') ? 'lawyer' : 'client';
+        const mockUser = {
+          id: `usr_demo_${Date.now()}`,
+          email,
+          user_metadata: {
+            role: mockRole,
+            full_name: mockRole === 'lawyer' ? 'المستشار / طارق القاضي' : 'أحمد إبراهيم منصور',
+          },
+        };
+        return { user: mockUser as any, session: { user: mockUser } as any, error: null, isDemo: true };
+      }
+      return { user: null, session: null, error, isDemo: false };
+    }
+
+    return { user: data.user, session: data.session, error: null, isDemo: false };
+  } catch (err: any) {
+    const mockRole: UserRole = email.includes('lawyer') ? 'lawyer' : 'client';
+    const mockUser = {
+      id: `usr_demo_${Date.now()}`,
+      email,
+      user_metadata: {
+        role: mockRole,
+        full_name: mockRole === 'lawyer' ? 'المستشار / طارق القاضي' : 'أحمد إبراهيم منصور',
+      },
+    };
+    return { user: mockUser as any, session: { user: mockUser } as any, error: null, isDemo: true };
   }
-
-  return { user: data.user, session: data.session, error: null, isDemo: false };
 }
 
 /**
