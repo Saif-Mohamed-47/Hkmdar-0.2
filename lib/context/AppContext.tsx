@@ -77,7 +77,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedLawyerId, setSelectedLawyerId] = useState<string>('lawyer-1');
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
-  const [user, setUser] = useState<User>(DEFAULT_CLIENT_USER);
+  const [user, setUser] = useState<User>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('hakmdar_user_data_v1');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {}
+      }
+    }
+    return DEFAULT_CLIENT_USER;
+  });
 
   // Sync Supabase Auth Session
   useEffect(() => {
