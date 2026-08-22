@@ -146,6 +146,20 @@ export default function AuthForm({ mode, defaultRole = 'client' }: AuthFormProps
           return;
         }
         const resolvedRole: UserRole = (user?.user_metadata?.role as UserRole) || 'client';
+        const savedName = user?.user_metadata?.full_name || (email.split('@')[0]);
+        const loggedUser: User = {
+          id: user?.id || `usr_${Date.now()}`,
+          name: savedName,
+          email,
+          phone: user?.user_metadata?.phone || '',
+          role: resolvedRole,
+          location: user?.user_metadata?.location || 'القاهرة',
+        };
+        try {
+          localStorage.setItem('hakmdar_user_data_v1', JSON.stringify(loggedUser));
+          localStorage.setItem('hakmdar_role_v1', resolvedRole);
+        } catch {}
+        setAppUser(loggedUser);
         setAppRole(resolvedRole);
         addToast({
           type: 'success',

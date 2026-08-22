@@ -37,30 +37,25 @@ interface AppContextType {
 }
 
 const DEFAULT_CLIENT_USER: User = {
-  id: 'client-101',
-  name: 'أحمد إبراهيم منصور',
-  email: 'ahmed.mansour@example.com',
-  phone: '+20 102 334 9988',
+  id: 'guest-client',
+  name: 'موكل جديد',
+  email: '',
+  phone: '',
   role: 'client',
   avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
-  location: 'القاهرة - المعادي',
+  location: 'القاهرة',
 };
 
 const DEFAULT_LAWYER_USER: User = {
-  id: 'lawyer-1',
-  name: 'المستشار / طارق عبد العزيز القاضي',
-  email: 'tarek.kadi@hakmdar-law.eg',
-  phone: '+20 100 234 5678',
+  id: 'guest-lawyer',
+  name: 'المحامي العام',
+  email: '',
+  phone: '',
   role: 'lawyer',
   avatar: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&q=80&w=400',
-  location: 'القاهرة (مصر الجديدة والتجمع الخامس)',
-  specialty: 'قضايا العمل والشركات والطعن بالنقض',
-  barNumber: 'EG-BAR-104928',
-  experienceYears: 18,
-  rating: 4.9,
-  winRate: 94,
-  casesCount: 380,
-  hourlyRate: 750,
+  location: 'القاهرة',
+  specialty: 'استشارات قانونية وقضايا عامة',
+  barNumber: '',
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
