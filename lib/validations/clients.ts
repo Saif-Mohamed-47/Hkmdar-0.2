@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const createClientSchema = z.object({
-  name: z.string().trim().min(1, 'اسم الموكل مطلوب'),
+  name: z.string({ required_error: 'اسم الموكل مطلوب', invalid_type_error: 'اسم الموكل مطلوب' }).trim().min(1, 'اسم الموكل مطلوب'),
   email: z.string().trim().email('البريد الإلكتروني غير صحيح').optional().or(z.literal('')),
   phone: z.string().trim().optional().or(z.literal('')),
   address: z.string().trim().optional().or(z.literal('')),
