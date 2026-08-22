@@ -164,25 +164,14 @@ export default function Navbar() {
           </nav>
         </div>
 
-        {/* Right Side: Role Toggle + Notifications + User Avatar */}
+        {/* Right Side: Notifications + User Avatar */}
         <div className="flex items-center gap-3">
           
-          {/* Quick Role Switcher Button */}
-          <button
-            onClick={toggleRole}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-300 shadow-md ${
-              isLawyer
-                ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/40 text-amber-300 hover:border-amber-400'
-                : 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/40 text-emerald-300 hover:border-emerald-400'
-            }`}
-            title="انقر للتبديل بين دور الموكل ودور المحامي للتجربة السريعة"
-          >
-            <ArrowRightLeft className="w-3.5 h-3.5" />
-            <span>الوضع الحالي:</span>
-            <span className="underline underline-offset-2">
-              {isLawyer ? 'بوابة المحامي ⚖️' : 'بوابة الموكل 👤'}
-            </span>
-          </button>
+          {/* User Role Badge */}
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 text-xs">
+            <span className={`w-2 h-2 rounded-full ${isLawyer ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+            <span className="text-slate-300 font-medium">{isLawyer ? 'بوابة المحامي ⚖️' : 'بوابة الموكل 👤'}</span>
+          </div>
 
           {/* Notifications Button */}
           <div className="relative">
