@@ -290,7 +290,7 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
 
             <div className="mt-5 space-y-1.5">
               <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                حُكْمَدَار
+                حِكِمْدار
               </h2>
               <p className="text-xs sm:text-sm font-semibold text-[#dfba73]">
                 للمحاماة والاستشارات القانونية وإدارة القضايا
