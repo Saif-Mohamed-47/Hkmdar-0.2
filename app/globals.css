@@ -199,3 +199,23 @@
     color: #000000 !important;
   }
 }
+
+@keyframes splashProgress {
+  0% {
+    width: 0%;
+    transform: translateX(100%);
+  }
+  50% {
+    width: 75%;
+    transform: translateX(0%);
+  }
+  100% {
+    width: 100%;
+    transform: translateX(0%);
+  }
+}
+
+.splash-progress-bar {
+  animation: splashProgress 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
