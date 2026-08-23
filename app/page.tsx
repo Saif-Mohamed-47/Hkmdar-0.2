@@ -18,9 +18,12 @@ import {
   Gavel
 } from 'lucide-react';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import LanguageToggle from '@/components/ui/LanguageToggle';
+import { translations } from '@/lib/data/translations';
 
 export default function LandingPage() {
-  const { setRole } = useApp();
+  const { setRole, lang } = useApp();
+  const t = translations[lang || 'ar'];
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col selection:bg-[#c5a059] selection:text-[#060a14] transition-colors duration-200">
@@ -30,32 +33,33 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3.5 group">
             <div className="w-12 h-12 rounded-xl bg-[var(--bg-input)] border border-[var(--accent-gold)]/40 p-1.5 flex items-center justify-center shadow-lg group-hover:border-[var(--accent-gold)] transition-colors overflow-hidden">
-              <img src="/hakmdar-icon.png" alt="حِكِمْدار" className="w-full h-full object-contain" />
+              <img src="/hakmdar-icon.png" alt={t.brand.name} className="w-full h-full object-contain" />
             </div>
             <div>
               <span className="font-black text-2xl tracking-tight text-[var(--text-primary)] block leading-none">
-                حِكِمْدار
+                {t.brand.name}
               </span>
               <span className="text-[11px] font-semibold text-[var(--accent-gold)] tracking-normal">
-                للمحاماة والاستشارات القانونية وإدارة القضايا
+                {t.brand.tagline}
               </span>
             </div>
           </Link>
 
           <div className="flex items-center gap-2.5">
+            <LanguageToggle />
             <ThemeToggle />
 
             <Link
               href="/login"
               className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] transition-colors"
             >
-              تسجيل الدخول
+              {t.nav.login}
             </Link>
             <Link
               href="/register"
               className="px-5 py-2 rounded-xl text-xs font-bold btn-legal-gold"
             >
-              إنشاء حساب
+              {t.nav.register}
             </Link>
           </div>
         </div>

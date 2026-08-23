@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { signOutUser } from '@/lib/supabaseClient';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import LanguageToggle from '@/components/ui/LanguageToggle';
+import { translations } from '@/lib/data/translations';
 
 interface NavLinkItem {
   href: string;
@@ -22,7 +24,8 @@ interface NavLinkItem {
 }
 
 export default function Navbar() {
-  const { role, user, cases, addToast } = useApp();
+  const { role, user, cases, addToast, lang } = useApp();
+  const t = translations[lang || 'ar'];
   const pathname = usePathname();
   const router = useRouter();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -37,8 +40,8 @@ export default function Navbar() {
       await signOutUser();
       addToast({
         type: 'info',
-        title: 'تم تسجيل الخروج',
-        message: 'تم إنهاء الجلسة بنجاح.',
+        title: lang === 'en' ? 'Logged Out' : 'تم تسجيل الخروج',
+        message: lang === 'en' ? 'Session ended successfully.' : 'تم إنهاء الجلسة بنجاح.',
       });
       router.push('/login');
     } catch (e) {
@@ -47,18 +50,18 @@ export default function Navbar() {
   };
 
   const clientNavLinks: NavLinkItem[] = [
-    { href: '/client/dashboard', label: 'الرئيسية' },
-    { href: '/client/ai-chat', label: 'المستشار القانوني' },
-    { href: '/client/legal-research', label: 'البحث في التشريعات' },
-    { href: '/client/lawyers', label: 'دليل المحامين' },
-    { href: '/client/my-cases', label: 'ملفات قضاياي' },
+    { href: '/client/dashboard', label: t.nav.home },
+    { href: '/client/ai-chat', label: t.nav.legalAdvisor },
+    { href: '/client/legal-research', label: t.nav.legalResearch },
+    { href: '/client/lawyers', label: t.nav.lawyersDirectory },
+    { href: '/client/my-cases', label: t.nav.myCases },
   ];
 
   const lawyerNavLinks: NavLinkItem[] = [
-    { href: '/lawyer/dashboard', label: 'لوحة التحكم' },
-    { href: '/lawyer/cases', label: 'ملفات القضايا', badge: pendingCasesCount },
-    { href: '/lawyer/ai-drafting', label: 'الصياغة القضائية' },
-    { href: '/lawyer/profile', label: 'الملف المهني' },
+    { href: '/lawyer/dashboard', label: t.nav.dashboard },
+    { href: '/lawyer/cases', label: t.nav.caseFiles, badge: pendingCasesCount },
+    { href: '/lawyer/ai-drafting', label: t.nav.aiDrafting },
+    { href: '/lawyer/profile', label: t.nav.lawyerProfile },
   ];
 
   const currentNavLinks = isLawyer ? lawyerNavLinks : clientNavLinks;
@@ -71,14 +74,14 @@ export default function Navbar() {
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-xl bg-[var(--bg-input)] border border-[var(--accent-gold)]/40 p-1 flex items-center justify-center shadow-md group-hover:border-[var(--accent-gold)] transition-colors overflow-hidden">
-              <img src="/hakmdar-icon.png" alt="حِكِمْدار" className="w-full h-full object-contain" />
+              <img src="/hakmdar-icon.png" alt={t.brand.name} className="w-full h-full object-contain" />
             </div>
             <div>
               <span className="font-extrabold text-lg tracking-tight text-[var(--text-primary)] block leading-none">
-                حِكِمْدار
+                {t.brand.name}
               </span>
               <span className="text-[10px] text-[var(--accent-gold)] font-medium">
-                {isLawyer ? 'بوابة المحامي' : 'بوابة الموكل'}
+                {isLawyer ? t.brand.lawyerPortal : t.brand.clientPortal}
               </span>
             </div>
           </Link>
@@ -109,19 +112,22 @@ export default function Navbar() {
           </nav>
         </div>
 
-        {/* Right Side: Theme Toggle + Role Switcher + Notifications + Profile */}
-        <div className="flex items-center gap-2.5">
+        {/* Right Side: Language Toggle + Theme Toggle + Role Switcher + Notifications + Profile */}
+        <div className="flex items-center gap-2">
           
+          {/* Language Switcher */}
+          <LanguageToggle />
+
           {/* Global Theme Toggle */}
           <ThemeToggle />
 
           {/* Active Role Badge (Locked) */}
           <div
-            className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 text-xs text-[var(--text-primary)]"
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 text-xs text-[var(--text-primary)]"
           >
             <span className="w-2 h-2 rounded-full bg-[var(--accent-gold)]" />
             <span className="font-medium text-xs">
-              {isLawyer ? 'بوابة المحامي' : 'بوابة الموكل'}
+              {isLawyer ? t.brand.lawyerPortal : t.brand.clientPortal}
             </span>
           </div>
 

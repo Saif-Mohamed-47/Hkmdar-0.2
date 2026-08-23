@@ -10,6 +10,8 @@ import { signUpUser, signInUser } from '@/lib/supabaseClient';
 import { loginSchema, registerSchema, RegisterFormData } from '@/lib/validations/authSchemas';
 import RoleSelector from './RoleSelector';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import LanguageToggle from '@/components/ui/LanguageToggle';
+import { translations } from '@/lib/data/translations';
 import {
   Mail,
   Lock,
@@ -69,7 +71,7 @@ const inputErr = 'border-rose-500/70 focus:border-rose-500 focus:ring-1 focus:ri
 export default function AuthForm({ initialMode = 'login', defaultRole = 'client' }: AuthFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setRole: setAppRole, addToast, setUser: setAppUser } = useApp();
+  const { setRole: setAppRole, addToast, setUser: setAppUser, lang } = useApp();
 
   const roleParam = searchParams.get('role');
   const initialSelectedRole: UserRole = (roleParam === 'lawyer' || roleParam === 'client') ? roleParam : defaultRole;
@@ -251,6 +253,7 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
       
       {/* Top Header Floating Controls */}
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+        <LanguageToggle />
         <ThemeToggle />
       </div>
 
@@ -260,7 +263,7 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-gold)] transition-colors"
         >
           <ArrowRight className="w-3.5 h-3.5" />
-          <span>الرئيسية</span>
+          <span>{translations[lang || 'ar'].nav.home}</span>
         </Link>
       </div>
 
