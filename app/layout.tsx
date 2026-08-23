@@ -3,7 +3,6 @@ import { Cairo, Inter } from 'next/font/google';
 import './globals.css';
 import { AppProvider } from '@/lib/context/AppContext';
 import ToastContainer from '@/components/ui/ToastContainer';
-import SplashScreen from '@/components/ui/SplashScreen';
 
 const cairo = Cairo({
   subsets: ['arabic', 'latin'],
@@ -58,7 +57,6 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AppProvider>
-          <SplashScreen />
           {children}
           <ToastContainer />
         </AppProvider>
