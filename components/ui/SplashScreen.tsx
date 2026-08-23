@@ -3,61 +3,60 @@
 import React, { useState, useEffect } from 'react';
 
 export default function SplashScreen() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [fading, setFading] = useState(false);
 
   useEffect(() => {
-    // Start fade-out timer
-    const timer = setTimeout(() => {
-      setIsFadingOut(true);
-      const removeTimer = setTimeout(() => {
-        setIsLoading(false);
-      }, 600);
+    // Show splash for 700ms, then start 300ms fade out, then completely remove from DOM
+    const fadeTimer = setTimeout(() => {
+      setFading(true);
+    }, 700);
 
-      return () => clearTimeout(removeTimer);
-    }, 1500);
+    const removeTimer = setTimeout(() => {
+      setVisible(false);
+    }, 1000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(removeTimer);
+    };
   }, []);
 
-  if (!isLoading) return null;
+  if (!visible) return null;
 
   return (
     <div
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        inset: 0,
         width: '100vw',
         height: '100vh',
         backgroundColor: '#060a14',
-        zIndex: 99999,
+        zIndex: 999999,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        opacity: isFadingOut ? 0 : 1,
-        transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-        pointerEvents: isFadingOut ? 'none' : 'auto',
+        opacity: fading ? 0 : 1,
+        transition: 'opacity 300ms ease-out',
+        pointerEvents: 'none',
         userSelect: 'none',
       }}
       dir="rtl"
     >
-      {/* Background Radial Glow */}
+      {/* Glow */}
       <div
         style={{
           position: 'absolute',
-          width: '450px',
-          height: '450px',
+          width: '350px',
+          height: '350px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(197, 160, 89, 0.15) 0%, rgba(6, 10, 20, 0) 70%)',
+          background: 'radial-gradient(circle, rgba(197, 160, 89, 0.18) 0%, rgba(6, 10, 20, 0) 70%)',
           pointerEvents: 'none',
         }}
       />
 
-      {/* Main Content Box */}
+      {/* Main Container */}
       <div
         style={{
           position: 'relative',
@@ -69,20 +68,20 @@ export default function SplashScreen() {
           padding: '0 20px',
         }}
       >
-        {/* Emblem Frame with Fixed Size */}
+        {/* Frame */}
         <div
           style={{
-            width: '120px',
-            height: '120px',
-            borderRadius: '24px',
+            width: '90px',
+            height: '90px',
+            borderRadius: '20px',
             backgroundColor: '#080e1c',
-            border: '2px solid rgba(197, 160, 89, 0.5)',
-            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(197, 160, 89, 0.2)',
-            padding: '10px',
+            border: '1.5px solid rgba(197, 160, 89, 0.5)',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.8), 0 0 15px rgba(197, 160, 89, 0.2)',
+            padding: '8px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            marginBottom: '20px',
+            marginBottom: '14px',
             overflow: 'hidden',
           }}
         >
@@ -101,11 +100,10 @@ export default function SplashScreen() {
         {/* Title */}
         <h1
           style={{
-            fontSize: '32px',
+            fontSize: '26px',
             fontWeight: 900,
             color: '#ffffff',
-            margin: '0 0 8px 0',
-            letterSpacing: '-0.5px',
+            margin: '0 0 6px 0',
             fontFamily: 'var(--font-cairo), system-ui, sans-serif',
           }}
         >
@@ -115,50 +113,38 @@ export default function SplashScreen() {
         {/* Subtitle */}
         <p
           style={{
-            fontSize: '13px',
+            fontSize: '12px',
             fontWeight: 600,
             color: '#dfba73',
-            margin: '0 0 24px 0',
-            maxWidth: '320px',
-            lineHeight: 1.6,
+            margin: '0 0 18px 0',
+            maxWidth: '300px',
+            lineHeight: 1.5,
             fontFamily: 'var(--font-cairo), system-ui, sans-serif',
           }}
         >
           المنظومة الرقمية لإدارة القضايا والاستشارات القانونية
         </p>
 
-        {/* Progress Bar Container */}
+        {/* Progress Bar */}
         <div
           style={{
-            width: '200px',
-            height: '4px',
+            width: '160px',
+            height: '3px',
             borderRadius: '9999px',
-            backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
             overflow: 'hidden',
-            position: 'relative',
           }}
         >
           <div
-            className="splash-progress-bar"
             style={{
+              width: fading ? '100%' : '75%',
               height: '100%',
               background: 'linear-gradient(90deg, #9e7b36, #dfba73, #c5a059)',
               borderRadius: '9999px',
+              transition: 'width 600ms ease-in-out',
             }}
           />
         </div>
-
-        {/* Status Text */}
-        <span
-          style={{
-            fontSize: '11px',
-            color: '#64748b',
-            marginTop: '16px',
-            fontFamily: 'var(--font-cairo), system-ui, sans-serif',
-          }}
-        >
-          جاري تجهيز المنصة الذكية...
-        </span>
       </div>
     </div>
   );
