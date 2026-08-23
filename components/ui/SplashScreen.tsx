@@ -3,81 +3,160 @@
 import React, { useState, useEffect } from 'react';
 
 export default function SplashScreen() {
-  const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-
-    // Check if the splash screen has already been shown in this tab session
-    const hasShown = sessionStorage.getItem('hakmdar_splash_shown');
-    if (hasShown) {
-      setIsLoading(false);
-      return;
-    }
-
-    // Timer to start fade out after assets / initial load
+    // Start fade-out timer
     const timer = setTimeout(() => {
       setIsFadingOut(true);
       const removeTimer = setTimeout(() => {
         setIsLoading(false);
-        try {
-          sessionStorage.setItem('hakmdar_splash_shown', 'true');
-        } catch {}
-      }, 700); // 700ms fade transition duration
+      }, 600);
 
       return () => clearTimeout(removeTimer);
-    }, 1800); // Show splash for 1.8 seconds
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, []);
 
-  if (!mounted || !isLoading) return null;
+  if (!isLoading) return null;
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#050811] transition-all duration-700 ease-out select-none ${
-        isFadingOut ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100 scale-100'
-      }`}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: '#060a14',
+        zIndex: 99999,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        opacity: isFadingOut ? 0 : 1,
+        transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+        pointerEvents: isFadingOut ? 'none' : 'auto',
+        userSelect: 'none',
+      }}
       dir="rtl"
     >
-      {/* Background ambient lighting effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(197,160,89,0.12)_0%,transparent_70%)] pointer-events-none" />
-      <div className="absolute w-96 h-96 rounded-full bg-[#111c38]/40 blur-3xl pointer-events-none animate-pulse" />
+      {/* Background Radial Glow */}
+      <div
+        style={{
+          position: 'absolute',
+          width: '450px',
+          height: '450px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(197, 160, 89, 0.15) 0%, rgba(6, 10, 20, 0) 70%)',
+          pointerEvents: 'none',
+        }}
+      />
 
-      {/* Center Brand Container */}
-      <div className="relative z-10 flex flex-col items-center text-center px-4 animate-in fade-in zoom-in-95 duration-500">
-        
-        {/* Emblem Frame with Gold Glow */}
-        <div className="relative mb-6 group">
-          <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-[#c5a059]/30 via-[#dfba73]/40 to-[#c5a059]/30 blur-xl opacity-75 animate-pulse" />
-          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-[#080e1c] border-2 border-[#c5a059]/60 p-2 shadow-2xl flex items-center justify-center overflow-hidden">
-            <img
-              src="/hakmdar-icon.png"
-              alt="حِكِمْدار"
-              className="w-full h-full object-contain drop-shadow-[0_4px_12px_rgba(197,160,89,0.4)]"
-            />
-          </div>
+      {/* Main Content Box */}
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+          padding: '0 20px',
+        }}
+      >
+        {/* Emblem Frame with Fixed Size */}
+        <div
+          style={{
+            width: '120px',
+            height: '120px',
+            borderRadius: '24px',
+            backgroundColor: '#080e1c',
+            border: '2px solid rgba(197, 160, 89, 0.5)',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(197, 160, 89, 0.2)',
+            padding: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '20px',
+            overflow: 'hidden',
+          }}
+        >
+          <img
+            src="/hakmdar-icon.png"
+            alt="حِكِمْدار"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              display: 'block',
+            }}
+          />
         </div>
 
-        {/* Brand Title with Diacritics */}
-        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white mb-2">
+        {/* Title */}
+        <h1
+          style={{
+            fontSize: '32px',
+            fontWeight: 900,
+            color: '#ffffff',
+            margin: '0 0 8px 0',
+            letterSpacing: '-0.5px',
+            fontFamily: 'var(--font-cairo), system-ui, sans-serif',
+          }}
+        >
           حِكِمْدار
         </h1>
 
         {/* Subtitle */}
-        <p className="text-xs sm:text-sm font-semibold text-[#dfba73] max-w-xs leading-relaxed mb-6">
+        <p
+          style={{
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#dfba73',
+            margin: '0 0 24px 0',
+            maxWidth: '320px',
+            lineHeight: 1.6,
+            fontFamily: 'var(--font-cairo), system-ui, sans-serif',
+          }}
+        >
           المنظومة الرقمية لإدارة القضايا والاستشارات القانونية
         </p>
 
-        {/* Animated Loading Bar */}
-        <div className="w-48 sm:w-56 h-1 rounded-full bg-slate-800/80 overflow-hidden relative border border-white/5">
-          <div className="h-full bg-gradient-to-r from-[#9e7b36] via-[#dfba73] to-[#c5a059] rounded-full splash-progress-bar" />
+        {/* Progress Bar Container */}
+        <div
+          style={{
+            width: '200px',
+            height: '4px',
+            borderRadius: '9999px',
+            backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            overflow: 'hidden',
+            position: 'relative',
+          }}
+        >
+          <div
+            className="splash-progress-bar"
+            style={{
+              height: '100%',
+              background: 'linear-gradient(90deg, #9e7b36, #dfba73, #c5a059)',
+              borderRadius: '9999px',
+            }}
+          />
         </div>
 
-        {/* Subtle Legal Seal Text */}
-        <span className="text-[10px] text-slate-500 mt-4 tracking-wider">
+        {/* Status Text */}
+        <span
+          style={{
+            fontSize: '11px',
+            color: '#64748b',
+            marginTop: '16px',
+            fontFamily: 'var(--font-cairo), system-ui, sans-serif',
+          }}
+        >
           جاري تجهيز المنصة الذكية...
         </span>
       </div>

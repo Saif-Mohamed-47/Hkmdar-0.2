@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useApp } from '@/lib/context/AppContext';
 import { 
   UserCheck, 
-  ArrowRightLeft, 
   Bell, 
   ChevronDown, 
   LogOut, 
@@ -23,7 +22,7 @@ interface NavLinkItem {
 }
 
 export default function Navbar() {
-  const { role, user, setRole, cases, addToast } = useApp();
+  const { role, user, cases, addToast } = useApp();
   const pathname = usePathname();
   const router = useRouter();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -32,12 +31,6 @@ export default function Navbar() {
 
   const pendingCasesCount = cases.filter((c) => c.status === 'new_intake').length;
   const isLawyer = role === 'lawyer';
-
-  const toggleRole = () => {
-    const nextRole = isLawyer ? 'client' : 'lawyer';
-    setRole(nextRole);
-    router.push(nextRole === 'lawyer' ? '/lawyer/dashboard' : '/client/dashboard');
-  };
 
   const handleLogout = async () => {
     try {
@@ -122,18 +115,15 @@ export default function Navbar() {
           {/* Global Theme Toggle */}
           <ThemeToggle />
 
-          {/* Active Role Badge & Switcher */}
-          <button
-            onClick={toggleRole}
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 text-xs text-[var(--text-primary)] hover:border-[var(--accent-gold)] transition-colors cursor-pointer"
-            title="التبديل بين دور المحامي ودور الموكل"
+          {/* Active Role Badge (Locked) */}
+          <div
+            className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 text-xs text-[var(--text-primary)]"
           >
             <span className="w-2 h-2 rounded-full bg-[var(--accent-gold)]" />
             <span className="font-medium text-xs">
-              {isLawyer ? 'حساب محامٍ' : 'حساب موكل'}
+              {isLawyer ? 'بوابة المحامي' : 'بوابة الموكل'}
             </span>
-            <ArrowRightLeft className="w-3 h-3 text-[var(--accent-gold)]" />
-          </button>
+          </div>
 
           {/* Notifications Popover */}
           <div className="relative">
@@ -215,16 +205,6 @@ export default function Navbar() {
                     <UserCheck className="w-4 h-4 text-[var(--accent-gold)]" />
                     <span>الملف الشخصي</span>
                   </Link>
-                  <button
-                    onClick={() => {
-                      toggleRole();
-                      setProfileDropdownOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--accent-gold)] hover:bg-[var(--bg-surface-elevated)] rounded-lg text-right transition-colors cursor-pointer"
-                  >
-                    <ArrowRightLeft className="w-4 h-4 text-[var(--accent-gold)]" />
-                    <span>التبديل إلى {isLawyer ? 'بوابة الموكل' : 'بوابة المحامي'}</span>
-                  </button>
                   <div className="my-1 border-t border-[var(--border-subtle)]" />
                   <button
                     onClick={handleLogout}
