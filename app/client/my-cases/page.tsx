@@ -63,7 +63,7 @@ export default function MyCasesPage() {
           </div>
           <h3 className="text-base font-bold text-white">لا توجد قضايا مسجلة حتى الآن</h3>
           <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-            عندما تتحدث مع المستشار القانوني الذكي وتختار "تحويل لملف قضية"، ستظهر القضية هنا بكامل تفاصيلها وأسانيدها وردود المحامي.
+            عندما تتحدث مع المستشار القانوني الذكي وتختار &quot;تحويل لملف قضية&quot;، ستظهر القضية هنا بكامل تفاصيلها وأسانيدها وردود المحامي.
           </p>
           <Link
             href="/client/ai-chat"

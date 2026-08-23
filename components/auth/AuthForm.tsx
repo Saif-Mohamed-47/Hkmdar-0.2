@@ -155,10 +155,7 @@ export default function AuthForm({ mode, defaultRole = 'client' }: AuthFormProps
           role: resolvedRole,
           location: user?.user_metadata?.location || 'القاهرة',
         };
-        try {
-          localStorage.setItem('hakmdar_user_data_v1', JSON.stringify(loggedUser));
-          localStorage.setItem('hakmdar_role_v1', resolvedRole);
-        } catch {}
+
         setAppUser(loggedUser);
         setAppRole(resolvedRole);
         addToast({
@@ -240,10 +237,7 @@ export default function AuthForm({ mode, defaultRole = 'client' }: AuthFormProps
           barNumber: meta.bar_number || barNumber,
           specialty: meta.specialty || specialty,
         };
-        try {
-          localStorage.setItem('hakmdar_user_data_v1', JSON.stringify(realUser));
-          localStorage.setItem('hakmdar_role_v1', role);
-        } catch {}
+
         setAppUser(realUser);
         setAppRole(role);
         addToast({

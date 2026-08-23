@@ -1,9 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserRole, CaseIntake, LawyerProfile, CaseStatus } from '../types';
+import { User, UserRole, CaseIntake, LawyerProfile, CaseStatus, LegalCategory, CaseUrgency } from '../types';
 import { MOCK_LAWYERS } from '../data/lawyersData';
-import { INITIAL_CASES } from '../data/initialCases';
 import { supabase } from '../supabaseClient';
 
 interface ToastNotification {
@@ -24,9 +23,9 @@ interface AppContextType {
   selectedLawyerId: string;
   setSelectedLawyerId: (id: string) => void;
   activeLawyer: LawyerProfile;
-  addCaseIntake: (newCase: Omit<CaseIntake, 'id' | 'createdAt' | 'updatedAt'>) => CaseIntake;
-  updateCaseStatus: (caseId: string, status: CaseStatus, lawyerNotes?: string, courtDate?: string) => void;
-  deleteCase: (caseId: string) => void;
+  addCaseIntake: (newCase: Omit<CaseIntake, 'id' | 'createdAt' | 'updatedAt'>) => Promise<CaseIntake>;
+  updateCaseStatus: (caseId: string, status: CaseStatus, lawyerNotes?: string, courtDate?: string) => Promise<void>;
+  deleteCase: (caseId: string) => Promise<void>;
   getCaseById: (caseId: string) => CaseIntake | undefined;
   toasts: ToastNotification[];
   addToast: (toast: Omit<ToastNotification, 'id' | 'timestamp'>) => void;
@@ -60,29 +59,99 @@ const DEFAULT_LAWYER_USER: User = {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_CASES_KEY = 'hakmdar_cases_v1';
-const LOCAL_STORAGE_ROLE_KEY = 'hakmdar_role_v1';
 const LOCAL_STORAGE_LANG_KEY = 'hakmdar_lang_v1';
+
+let toastIdCounter = 0;
+function createToastNotification(toast: Omit<ToastNotification, 'id' | 'timestamp'>): ToastNotification {
+  toastIdCounter += 1;
+  return {
+    ...toast,
+    id: `toast-${toastIdCounter}`,
+    timestamp: 0,
+  };
+}
+
+function mapDbCaseToCaseIntake(dbCase: Record<string, unknown>): CaseIntake {
+  const statusMap: Record<string, CaseStatus> = {
+    active: 'accepted',
+    pending: 'new_intake',
+    closed: 'closed',
+    new_intake: 'new_intake',
+    under_review: 'under_review',
+    accepted: 'accepted',
+    in_court: 'in_court',
+    resolved: 'resolved',
+  };
+
+  const clientInfo = dbCase.clients as Record<string, string> | undefined;
+
+  return {
+    id: String(dbCase.id || ''),
+    clientId: String(dbCase.client_id || ''),
+    clientName: clientInfo?.name || 'موكل',
+    clientEmail: clientInfo?.email || '',
+    clientPhone: clientInfo?.phone || '',
+    clientLocation: clientInfo?.address || 'القاهرة',
+    lawyerId: String(dbCase.lawyer_id || ''),
+    title: String(dbCase.title || 'قضية جديدة'),
+    category: (dbCase.category as LegalCategory) || 'labor',
+    urgency: (dbCase.urgency as CaseUrgency) || 'high',
+    status: statusMap[String(dbCase.status)] || (dbCase.status as CaseStatus) || 'new_intake',
+    executiveSummary: String(dbCase.description || ''),
+    legalClaims: [],
+    relevantStatutes: [],
+    clientTimeline: [],
+    aiStrategicRecommendation: '',
+    createdAt: String(dbCase.created_at || new Date().toISOString()),
+    updatedAt: String(dbCase.updated_at || dbCase.created_at || new Date().toISOString()),
+    lawyerNotes: dbCase.lawyer_notes ? String(dbCase.lawyer_notes) : undefined,
+    courtDate: dbCase.court_date ? String(dbCase.court_date) : undefined,
+  };
+}
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [role, setRoleState] = useState<UserRole>('client');
-  const [lang, setLangState] = useState<'ar' | 'en'>('ar');
-  const [cases, setCases] = useState<CaseIntake[]>(INITIAL_CASES);
+  const [lang, setLangState] = useState<'ar' | 'en'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedLang = localStorage.getItem(LOCAL_STORAGE_LANG_KEY) as 'ar' | 'en';
+        if (savedLang) return savedLang;
+      } catch {}
+    }
+    return 'ar';
+  });
+  const [cases, setCases] = useState<CaseIntake[]>([]);
   const [lawyers] = useState<LawyerProfile[]>(MOCK_LAWYERS);
   const [selectedLawyerId, setSelectedLawyerId] = useState<string>('lawyer-1');
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
-  const [isHydrated, setIsHydrated] = useState(false);
   const [user, setUser] = useState<User>(DEFAULT_CLIENT_USER);
 
-  // Sync Supabase Auth Session and local storage after mount
+  // Fetch cases belonging to the authenticated lawyer from backend
+  const fetchUserCases = async (accessToken?: string) => {
+    try {
+      const headers: Record<string, string> = {};
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+      const res = await fetch('/api/cases', { headers });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setCases(data.map(mapDbCaseToCaseIntake));
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch cases from backend:', e);
+    }
+  };
+
+  // Sync Supabase Auth Session
   useEffect(() => {
-    setIsHydrated(true);
     const syncSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      const localUserData = localStorage.getItem('hakmdar_user_data_v1');
 
       if (session?.user) {
-        const meta = session.user.user_metadata;
+        const meta = session.user.user_metadata || {};
         const resolvedRole = (meta.role as UserRole) || 'client';
         setRoleState(resolvedRole);
         setUser({
@@ -96,18 +165,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           specialty: meta.specialty || '',
           avatar: meta.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
         });
-      } else if (localUserData) {
-        try {
-          const parsed = JSON.parse(localUserData);
-          setUser(parsed);
-          setRoleState(parsed.role || 'client');
-        } catch {
-          setUser(DEFAULT_CLIENT_USER);
-        }
+        fetchUserCases(session.access_token);
       } else {
-        const savedRole = localStorage.getItem(LOCAL_STORAGE_ROLE_KEY) as UserRole;
-        const activeRole = savedRole || role;
-        setUser(activeRole === 'lawyer' ? DEFAULT_LAWYER_USER : DEFAULT_CLIENT_USER);
+        setUser(DEFAULT_CLIENT_USER);
+        setCases([]);
       }
     };
 
@@ -115,7 +176,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        const meta = session.user.user_metadata;
+        const meta = session.user.user_metadata || {};
         const resolvedRole = (meta.role as UserRole) || 'client';
         setRoleState(resolvedRole);
         setUser({
@@ -129,60 +190,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           specialty: meta.specialty || '',
           avatar: meta.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
         });
+        fetchUserCases(session.access_token);
       } else {
-        const localUserData = localStorage.getItem('hakmdar_user_data_v1');
-        if (localUserData) {
-          try {
-            const parsed = JSON.parse(localUserData);
-            setUser(parsed);
-            setRoleState(parsed.role || 'client');
-            return;
-          } catch {}
-        }
-        setUser(role === 'lawyer' ? DEFAULT_LAWYER_USER : DEFAULT_CLIENT_USER);
+        setUser(DEFAULT_CLIENT_USER);
+        setCases([]);
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [role]);
-
-  // Hydrate from localStorage
-  useEffect(() => {
-    try {
-      const savedCases = localStorage.getItem(LOCAL_STORAGE_CASES_KEY);
-      if (savedCases) {
-        setCases(JSON.parse(savedCases));
-      }
-      const savedRole = localStorage.getItem(LOCAL_STORAGE_ROLE_KEY) as UserRole;
-      if (savedRole && (savedRole === 'client' || savedRole === 'lawyer')) {
-        setRoleState(savedRole);
-      }
-      const savedLang = localStorage.getItem(LOCAL_STORAGE_LANG_KEY) as 'ar' | 'en';
-      if (savedLang) {
-        setLangState(savedLang);
-      }
-    } catch (e) {
-      console.warn('LocalStorage error:', e);
-    }
-    setIsHydrated(true);
   }, []);
 
-  // Sync cases to localStorage
-  useEffect(() => {
-    if (isHydrated) {
-      localStorage.setItem(LOCAL_STORAGE_CASES_KEY, JSON.stringify(cases));
-    }
-  }, [cases, isHydrated]);
-
-  // Sync role to localStorage
   const setRole = (newRole: UserRole) => {
     setRoleState(newRole);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(LOCAL_STORAGE_ROLE_KEY, newRole);
-    }
-    // Also update mock user if no Supabase session is active
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         setUser(newRole === 'lawyer' ? DEFAULT_LAWYER_USER : DEFAULT_CLIENT_USER);
@@ -203,16 +224,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addToast = (toast: Omit<ToastNotification, 'id' | 'timestamp'>) => {
-    const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
-    const newToast: ToastNotification = {
-      ...toast,
-      id,
-      timestamp: Date.now(),
-    };
+    const newToast = createToastNotification(toast);
     setToasts((prev) => [...prev.slice(-3), newToast]);
 
     setTimeout(() => {
-      removeToast(id);
+      removeToast(newToast.id);
     }, 4500);
   };
 
@@ -220,31 +236,105 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const addCaseIntake = (newCaseData: Omit<CaseIntake, 'id' | 'createdAt' | 'updatedAt'>): CaseIntake => {
-    const newCase: CaseIntake = {
+  const addCaseIntake = async (
+    newCaseData: Omit<CaseIntake, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<CaseIntake> => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      // Step 1: Ensure Client record exists or create one
+      let clientId = newCaseData.clientId;
+      if (!clientId || clientId === 'guest-client') {
+        const clientRes = await fetch('/api/clients', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            name: newCaseData.clientName || 'موكل جديد',
+            email: newCaseData.clientEmail || null,
+            phone: newCaseData.clientPhone || null,
+            address: newCaseData.clientLocation || null,
+          }),
+        });
+        if (clientRes.ok) {
+          const clientObj = await clientRes.json();
+          clientId = clientObj.id;
+        }
+      }
+
+      // Step 2: Post Case record to backend
+      const caseRes = await fetch('/api/cases', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          client_id: clientId,
+          title: newCaseData.title,
+          status: 'pending',
+          description: newCaseData.executiveSummary || null,
+        }),
+      });
+
+      if (caseRes.ok) {
+        const createdDbCase = await caseRes.json();
+        const createdCase = mapDbCaseToCaseIntake(createdDbCase);
+
+        setCases((prev) => [createdCase, ...prev]);
+
+        addToast({
+          type: 'success',
+          title: 'تم إرسال ملخص القضية للمحامي بنجاح',
+          message: `تم تحويل القضية (${createdCase.title}) إلى القضايا المسجلة`,
+        });
+
+        return createdCase;
+      }
+    } catch (err) {
+      console.error('Error creating case intake:', err);
+    }
+
+    // Fallback in-memory representation if network or backend fail
+    const fallbackCase: CaseIntake = {
       ...newCaseData,
-      id: `case-intake-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: `case-${Date.now()}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-
-    setCases((prev) => [newCase, ...prev]);
-
-    addToast({
-      type: 'success',
-      title: 'تم إرسال ملخص القضية للمحامي بنجاح',
-      message: `تم تحويل القضية (${newCase.title}) إلى مكتب ${newCase.lawyerName || 'المحامي المختار'}`,
-    });
-
-    return newCase;
+    setCases((prev) => [fallbackCase, ...prev]);
+    return fallbackCase;
   };
 
-  const updateCaseStatus = (
+  const updateCaseStatus = async (
     caseId: string,
     status: CaseStatus,
     lawyerNotes?: string,
     courtDate?: string
   ) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const dbStatus = (status === 'accepted' || status === 'in_court') ? 'active' : status === 'closed' ? 'closed' : 'pending';
+
+      await fetch(`/api/cases/${caseId}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({
+          status: dbStatus,
+          description: lawyerNotes,
+        }),
+      });
+    } catch (err) {
+      console.error('Error updating case status:', err);
+    }
+
     setCases((prev) =>
       prev.map((c) => {
         if (c.id === caseId) {
@@ -276,7 +366,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const deleteCase = (caseId: string) => {
+  const deleteCase = async (caseId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      await fetch(`/api/cases/${caseId}`, {
+        method: 'DELETE',
+        headers,
+      });
+    } catch (err) {
+      console.error('Error deleting case:', err);
+    }
+
     setCases((prev) => prev.filter((c) => c.id !== caseId));
     addToast({
       type: 'warning',

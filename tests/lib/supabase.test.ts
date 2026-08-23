@@ -1,8 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
 
 describe('createServerClient utility', () => {
+  beforeAll(() => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hosjkrjgfseklllrbkvm.supabase.co';
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'test-anon-key';
+  });
+
   it('should extract Bearer token from NextRequest and attach Authorization header', () => {
     const req = new NextRequest('http://localhost:3000/api/clients', {
       headers: {

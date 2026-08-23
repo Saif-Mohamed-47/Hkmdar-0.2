@@ -24,6 +24,12 @@ import CaseSummaryModal from '@/components/client/CaseSummaryModal';
 import LawyerMatchModal from '@/components/client/LawyerMatchModal';
 import { useRouter } from 'next/navigation';
 
+let chatMsgCounter = 0;
+function createChatMessageId(prefix: string) {
+  chatMsgCounter += 1;
+  return `${prefix}-${chatMsgCounter}`;
+}
+
 const QUICK_PROMPTS = [
   'فصلني صاحب العمل بدون إنذار بعد 5 سنوات خدمة، ما هي تعويضاتي ومستحقاتي؟',
   'لدي شيك تجاري مرتجع لعدم كفاية الرصيد، ما الإجراءات القانونية ومواعيد السقوط؟',
@@ -98,7 +104,7 @@ export default function LegalAIChatPage() {
     if (!text || isLoading) return;
 
     const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
+      id: createChatMessageId('user'),
       sender: 'user',
       text,
       timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
@@ -123,7 +129,7 @@ export default function LegalAIChatPage() {
       const data = await response.json();
 
       const assistantMessage: ChatMessage = {
-        id: `assistant-${Date.now()}`,
+        id: createChatMessageId('assistant'),
         sender: 'assistant',
         text: data.reply,
         timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),

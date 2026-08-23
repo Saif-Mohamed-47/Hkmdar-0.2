@@ -42,9 +42,10 @@ export async function GET(req: NextRequest, { params }: Props) {
     }
 
     return NextResponse.json(data, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal Server Error';
     return NextResponse.json(
-      { error: err.message || 'Internal Server Error' },
+      { error: message },
       { status: 500 }
     );
   }
@@ -71,7 +72,7 @@ export async function PUT(req: NextRequest, { params }: Props) {
       );
     }
 
-    let body: any;
+    let body: unknown;
     try {
       body = await req.json();
     } catch {
@@ -90,7 +91,8 @@ export async function PUT(req: NextRequest, { params }: Props) {
     }
 
     // Strip lawyer_id to prevent ownership manipulation
-    const { lawyer_id: _, ...updateData } = parsed.data as any;
+    const updateData = { ...parsed.data } as Record<string, unknown>;
+    delete updateData.lawyer_id;
 
     const { data, error } = await supabase
       .from('clients')
@@ -108,9 +110,10 @@ export async function PUT(req: NextRequest, { params }: Props) {
     }
 
     return NextResponse.json(data, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal Server Error';
     return NextResponse.json(
-      { error: err.message || 'Internal Server Error' },
+      { error: message },
       { status: 500 }
     );
   }
@@ -151,9 +154,10 @@ export async function DELETE(req: NextRequest, { params }: Props) {
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal Server Error';
     return NextResponse.json(
-      { error: err.message || 'Internal Server Error' },
+      { error: message },
       { status: 500 }
     );
   }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '@/lib/context/AppContext';
 import { LegalArticleSearchItem, LegalCategory } from '@/lib/types';
 import { LEGAL_CATEGORIES_INFO, MOCK_LEGAL_DATABASE } from '@/lib/data/legalData';
@@ -24,11 +24,10 @@ export default function LegalResearchPage() {
   const { addToast } = useApp();
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<LegalCategory | 'all'>('all');
-  const [results, setResults] = useState<LegalArticleSearchItem[]>(MOCK_LEGAL_DATABASE);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  useEffect(() => {
+  const results = useMemo(() => {
     let filtered = MOCK_LEGAL_DATABASE;
 
     if (selectedCategory !== 'all') {
@@ -48,7 +47,7 @@ export default function LegalResearchPage() {
       );
     }
 
-    setResults(filtered);
+    return filtered;
   }, [query, selectedCategory]);
 
   const handleCopyCitation = (item: LegalArticleSearchItem) => {

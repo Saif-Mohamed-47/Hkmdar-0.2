@@ -42,9 +42,10 @@ export async function GET(req: NextRequest, { params }: Props) {
     }
 
     return NextResponse.json(data, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal Server Error';
     return NextResponse.json(
-      { error: err.message || 'Internal Server Error' },
+      { error: message },
       { status: 500 }
     );
   }
@@ -71,7 +72,7 @@ export async function PUT(req: NextRequest, { params }: Props) {
       );
     }
 
-    let body: any;
+    let body: unknown;
     try {
       body = await req.json();
     } catch {
@@ -90,7 +91,9 @@ export async function PUT(req: NextRequest, { params }: Props) {
     }
 
     // Strip lawyer_id and client_id to prevent ownership/relationship manipulation
-    const { lawyer_id: _, client_id: __, ...updateData } = parsed.data as any;
+    const updateData = { ...parsed.data } as Record<string, unknown>;
+    delete updateData.lawyer_id;
+    delete updateData.client_id;
 
     const { data, error } = await supabase
       .from('cases')
@@ -108,9 +111,56 @@ export async function PUT(req: NextRequest, { params }: Props) {
     }
 
     return NextResponse.json(data, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal Server Error';
     return NextResponse.json(
-      { error: err.message || 'Internal Server Error' },
+      { error: message },
+      { status: 500 }
+    );
+  }
+}
+
+export { PUT as PATCH };
+
+/**
+ * DELETE /api/cases/[id]
+ * Delete a case record.
+ */
+export async function DELETE(req: NextRequest, { params }: Props) {
+  try {
+    const { id } = await params;
+    if (!id) {
+      return NextResponse.json({ error: 'معرف القضية مطلوب' }, { status: 400 });
+    }
+
+    const supabase = createServerClient(req);
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'يجب تسجيل الدخول أولاً (Unauthorized)' },
+        { status: 401 }
+      );
+    }
+
+    const { error } = await supabase
+      .from('cases')
+      .delete()
+      .eq('id', id)
+      .eq('lawyer_id', user.id);
+
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal Server Error';
+    return NextResponse.json(
+      { error: message },
       { status: 500 }
     );
   }

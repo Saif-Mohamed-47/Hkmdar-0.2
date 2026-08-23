@@ -225,7 +225,7 @@ export default function CaseSummaryModal({
               </label>
               <select
                 value={urgency}
-                onChange={(e) => setUrgency(e.target.value as any)}
+                onChange={(e) => setUrgency(e.target.value as CaseIntake['urgency'])}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500"
               >
                 <option value="urgent">🚨 عاجل جداً (خلال 24 ساعة)</option>

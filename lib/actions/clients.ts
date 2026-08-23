@@ -26,15 +26,16 @@ export async function getClients(): Promise<ActionResult<Client[]>> {
     }
 
     return { success: true, data: data as Client[] };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'حدث خطأ أثناء جلب قائمة الموكلين' };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'حدث خطأ أثناء جلب قائمة الموكلين';
+    return { success: false, error: message };
   }
 }
 
 /**
  * Get client by ID with related cases.
  */
-export async function getClientById(id: string): Promise<ActionResult<any>> {
+export async function getClientById(id: string): Promise<ActionResult<Record<string, unknown>>> {
   if (!id) {
     return { success: false, error: 'معرف الموكل مطلوب' };
   }
@@ -57,9 +58,10 @@ export async function getClientById(id: string): Promise<ActionResult<any>> {
       return { success: false, error: error.message };
     }
 
-    return { success: true, data };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'حدث خطأ أثناء جلب بيانات الموكل' };
+    return { success: true, data: data as Record<string, unknown> };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'حدث خطأ أثناء جلب بيانات الموكل';
+    return { success: false, error: message };
   }
 }
 
@@ -97,8 +99,9 @@ export async function createClientAction(input: CreateClientInput): Promise<Acti
     }
 
     return { success: true, data: data as Client };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'حدث خطأ أثناء إضافة الموكل' };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'حدث خطأ أثناء إضافة الموكل';
+    return { success: false, error: message };
   }
 }
 
@@ -135,8 +138,9 @@ export async function updateClientAction(id: string, input: UpdateClientInput): 
     }
 
     return { success: true, data: data as Client };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'حدث خطأ أثناء تعديل بيانات الموكل' };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'حدث خطأ أثناء تعديل بيانات الموكل';
+    return { success: false, error: message };
   }
 }
 
@@ -166,7 +170,8 @@ export async function deleteClientAction(id: string): Promise<ActionResult<void>
     }
 
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'حدث خطأ أثناء حذف الموكل' };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'حدث خطأ أثناء حذف الموكل';
+    return { success: false, error: message };
   }
 }
