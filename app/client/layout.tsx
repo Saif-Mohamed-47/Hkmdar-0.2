@@ -1,11 +1,28 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import { useApp } from '@/lib/context/AppContext';
+import { useRouter } from 'next/navigation';
 
 export default function ClientLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { role } = useApp();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (role === 'lawyer') {
+      router.replace('/lawyer/dashboard');
+    }
+  }, [role, router]);
+
+  if (role === 'lawyer') {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col transition-colors duration-200">
       <Navbar />

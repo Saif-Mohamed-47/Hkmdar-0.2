@@ -268,10 +268,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const applyLanguageSettings = (l: 'ar' | 'en') => {
+    if (typeof document !== 'undefined') {
+      const root = document.documentElement;
+      root.setAttribute('lang', l);
+      root.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr');
+      if (l === 'en') {
+        root.classList.add('font-sans-en');
+      } else {
+        root.classList.remove('font-sans-en');
+      }
+    }
+  };
+
+  useEffect(() => {
+    applyLanguageSettings(lang);
+  }, [lang]);
+
   const setLang = (newLang: 'ar' | 'en') => {
     setLangState(newLang);
+    applyLanguageSettings(newLang);
     if (typeof window !== 'undefined') {
-      localStorage.setItem(LOCAL_STORAGE_LANG_KEY, newLang);
+      try {
+        localStorage.setItem(LOCAL_STORAGE_LANG_KEY, newLang);
+      } catch {}
     }
   };
 

@@ -6,15 +6,17 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useApp } from '@/lib/context/AppContext';
 import { 
   UserCheck, 
-  ArrowRightLeft, 
   Bell, 
   ChevronDown, 
   LogOut, 
   Menu, 
-  X 
+  X,
+  Scale
 } from 'lucide-react';
 import { signOutUser } from '@/lib/supabaseClient';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import LanguageToggle from '@/components/ui/LanguageToggle';
+import { translations } from '@/lib/data/translations';
 
 interface NavLinkItem {
   href: string;
@@ -23,7 +25,8 @@ interface NavLinkItem {
 }
 
 export default function Navbar() {
-  const { role, user, setRole, cases, addToast } = useApp();
+  const { role, user, cases, addToast, lang } = useApp();
+  const t = translations[lang || 'ar'];
   const pathname = usePathname();
   const router = useRouter();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -33,39 +36,33 @@ export default function Navbar() {
   const pendingCasesCount = cases.filter((c) => c.status === 'new_intake').length;
   const isLawyer = role === 'lawyer';
 
-  const toggleRole = () => {
-    const nextRole = isLawyer ? 'client' : 'lawyer';
-    setRole(nextRole);
-    router.push(nextRole === 'lawyer' ? '/lawyer/dashboard' : '/client/dashboard');
-  };
-
   const handleLogout = async () => {
     try {
       await signOutUser();
       addToast({
         type: 'info',
-        title: 'تم تسجيل الخروج',
-        message: 'تم إنهاء الجلسة بنجاح.',
+        title: lang === 'en' ? 'Logged Out' : 'تم تسجيل الخروج',
+        message: lang === 'en' ? 'Session ended successfully.' : 'تم إنهاء الجلسة بنجاح.',
       });
       router.push('/login');
-    } catch (e) {
+    } catch {
       router.push('/login');
     }
   };
 
   const clientNavLinks: NavLinkItem[] = [
-    { href: '/client/dashboard', label: 'الرئيسية' },
-    { href: '/client/ai-chat', label: 'المستشار القانوني' },
-    { href: '/client/legal-research', label: 'البحث في التشريعات' },
-    { href: '/client/lawyers', label: 'دليل المحامين' },
-    { href: '/client/my-cases', label: 'ملفات قضاياي' },
+    { href: '/client/dashboard', label: t.nav.home },
+    { href: '/client/ai-chat', label: t.nav.legalAdvisor },
+    { href: '/client/legal-research', label: t.nav.legalResearch },
+    { href: '/client/lawyers', label: t.nav.lawyersDirectory },
+    { href: '/client/cases', label: t.nav.myCases },
   ];
 
   const lawyerNavLinks: NavLinkItem[] = [
-    { href: '/lawyer/dashboard', label: 'لوحة التحكم' },
-    { href: '/lawyer/cases', label: 'ملفات القضايا', badge: pendingCasesCount },
-    { href: '/lawyer/ai-drafting', label: 'الصياغة القضائية' },
-    { href: '/lawyer/profile', label: 'الملف المهني' },
+    { href: '/lawyer/dashboard', label: t.nav.dashboard },
+    { href: '/lawyer/cases', label: t.nav.caseFiles, badge: pendingCasesCount },
+    { href: '/lawyer/ai-drafting', label: t.nav.aiDrafting },
+    { href: '/lawyer/profile', label: t.nav.lawyerProfile },
   ];
 
   const currentNavLinks = isLawyer ? lawyerNavLinks : clientNavLinks;
@@ -77,15 +74,15 @@ export default function Navbar() {
         {/* Brand & Logo */}
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-[var(--bg-input)] border border-[var(--accent-gold)]/40 p-1 flex items-center justify-center shadow-md group-hover:border-[var(--accent-gold)] transition-colors">
-              <img src="/hakmdar-logo.png" alt="حكمدار" className="w-full h-full object-contain" />
+            <div className="w-10 h-10 rounded-xl bg-[var(--bg-input)] border border-[var(--accent-gold)]/40 p-1.5 flex items-center justify-center shadow-md group-hover:border-[var(--accent-gold)] transition-colors overflow-hidden">
+              <img src="/hakmdar-icon.png" alt={t.brand.name} className="w-full h-full object-contain" />
             </div>
             <div>
               <span className="font-extrabold text-lg tracking-tight text-[var(--text-primary)] block leading-none">
-                حُكْمَدَار
+                {t.brand.name}
               </span>
               <span className="text-[10px] text-[var(--accent-gold)] font-medium">
-                {isLawyer ? 'بوابة المحامي' : 'بوابة الموكل'}
+                {isLawyer ? t.brand.lawyerPortal : t.brand.clientPortal}
               </span>
             </div>
           </Link>
@@ -116,31 +113,32 @@ export default function Navbar() {
           </nav>
         </div>
 
-        {/* Right Side: Theme Toggle + Role Switcher + Notifications + Profile */}
+        {/* Right Side: Language + Theme + Role Badge + Notifications + Profile */}
         <div className="flex items-center gap-2.5">
           
+          {/* Language Switcher */}
+          <LanguageToggle />
+
           {/* Global Theme Toggle */}
           <ThemeToggle />
 
-          {/* Active Role Badge & Switcher */}
-          <button
-            onClick={toggleRole}
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 text-xs text-[var(--text-primary)] hover:border-[var(--accent-gold)] transition-colors cursor-pointer"
-            title="التبديل بين دور المحامي ودور الموكل"
+          {/* Active Locked Role Badge (No Manual Role Switching) */}
+          <div
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 text-xs text-[var(--text-primary)] select-none"
+            title={isLawyer ? 'حساب محامٍ ممارس مقيد' : 'حساب موكل مقيد'}
           >
             <span className="w-2 h-2 rounded-full bg-[var(--accent-gold)]" />
             <span className="font-medium text-xs">
-              {isLawyer ? 'حساب محامٍ' : 'حساب موكل'}
+              {isLawyer ? (lang === 'en' ? 'Lawyer Account' : 'حساب محامٍ') : (lang === 'en' ? 'Client Account' : 'حساب موكل')}
             </span>
-            <ArrowRightLeft className="w-3 h-3 text-[var(--accent-gold)]" />
-          </button>
+          </div>
 
           {/* Notifications Popover */}
           <div className="relative">
             <button
               onClick={() => setNotificationsOpen(!notificationsOpen)}
               className="p-2.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] relative transition-colors border border-[var(--border-subtle)] cursor-pointer"
-              aria-label="الإشعارات"
+              aria-label={t.nav.notifications}
             >
               <Bell className="w-4 h-4" />
               {pendingCasesCount > 0 && isLawyer && (
@@ -149,60 +147,54 @@ export default function Navbar() {
             </button>
 
             {notificationsOpen && (
-              <div className="absolute left-0 mt-2 w-80 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-card)] shadow-2xl p-4 z-50 animate-in fade-in">
+              <div className="absolute rtl:left-0 ltr:right-0 mt-2 w-80 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-card)] shadow-2xl p-4 z-50 animate-in fade-in">
                 <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
-                  <h4 className="text-xs font-bold text-[var(--text-primary)]">إشعارات القضايا</h4>
+                  <h4 className="text-xs font-bold text-[var(--text-primary)]">{t.nav.notifications}</h4>
                   <span className="text-[10px] text-[var(--accent-gold)] bg-[var(--bg-surface-elevated)] px-2 py-0.5 rounded-full border border-[var(--accent-gold)]/20">
-                    مباشر
+                    {t.nav.live}
                   </span>
                 </div>
                 <div className="mt-3 space-y-2 max-h-64 overflow-y-auto">
                   {isLawyer ? (
                     cases.slice(0, 4).map((c) => (
-                      <Link
+                      <div
                         key={c.id}
-                        href={`/lawyer/cases/${c.id}`}
-                        onClick={() => setNotificationsOpen(false)}
-                        className="block p-3 rounded-xl bg-[var(--bg-input)] hover:bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] transition-colors text-right"
+                        className="p-2.5 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] space-y-1"
                       >
-                        <p className="text-xs font-bold text-[var(--text-primary)] truncate">{c.title}</p>
-                        <p className="text-[11px] text-[var(--text-secondary)] mt-1">
-                          الموكل: {c.clientName} • {c.urgency === 'urgent' ? 'أولوية قصوى' : 'طلب وارد'}
-                        </p>
-                      </Link>
+                        <p className="text-xs font-semibold text-[var(--text-primary)]">{c.title}</p>
+                        <p className="text-[10px] text-[var(--text-secondary)] truncate">{c.description}</p>
+                      </div>
                     ))
                   ) : (
-                    <div className="p-4 text-center text-xs text-[var(--text-muted)]">
-                      لا توجد تنبيهات جديدة في الوقت الحالي
-                    </div>
+                    <p className="text-xs text-[var(--text-secondary)] text-center py-4">{t.nav.noNotifications}</p>
                   )}
                 </div>
               </div>
             )}
           </div>
 
-          {/* User Profile Pill */}
+          {/* User Profile Menu */}
           <div className="relative">
             <button
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              className="flex items-center gap-2.5 p-1.5 pr-3 rounded-full bg-[var(--bg-input)] border border-[var(--border-subtle)] hover:border-[var(--accent-gold)]/40 transition-all cursor-pointer"
+              className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-xl hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] transition-colors cursor-pointer"
             >
-              <div className="w-7 h-7 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 flex items-center justify-center text-[var(--accent-gold)] font-bold text-xs">
-                {user.name ? user.name[0] : 'ح'}
+              <div className="w-7 h-7 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/40 flex items-center justify-center text-xs font-bold text-[var(--accent-gold)]">
+                {user.name ? user.name.slice(0, 1) : 'ح'}
               </div>
-              <span className="text-xs font-semibold text-[var(--text-primary)] hidden sm:block max-w-[120px] truncate">
-                {user.name || 'المستخدم'}
+              <span className="hidden sm:inline text-xs font-semibold text-[var(--text-primary)] max-w-[100px] truncate">
+                {user.name}
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+              <ChevronDown className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
             </button>
 
             {profileDropdownOpen && (
-              <div className="absolute left-0 mt-2 w-60 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-card)] shadow-2xl p-2 z-50 text-right animate-in fade-in">
+              <div className="absolute rtl:left-0 ltr:right-0 mt-2 w-60 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-card)] shadow-2xl p-2 z-50 animate-in fade-in">
                 <div className="p-3 border-b border-[var(--border-subtle)]">
                   <p className="text-xs font-bold text-[var(--text-primary)] truncate">{user.name}</p>
                   <p className="text-[10px] text-[var(--text-muted)] truncate mt-0.5">{user.email}</p>
                   <span className="inline-block mt-2 text-[10px] font-semibold px-2 py-0.5 rounded bg-[var(--bg-surface-elevated)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/20">
-                    {isLawyer ? 'حساب محامٍ معتمد' : 'حساب موكل موثق'}
+                    {isLawyer ? (lang === 'en' ? 'Certified Lawyer' : 'حساب محامٍ معتمد') : (lang === 'en' ? 'Verified Client' : 'حساب موكل موثق')}
                   </span>
                 </div>
 
@@ -213,25 +205,15 @@ export default function Navbar() {
                     className="flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-surface-elevated)] hover:text-[var(--text-primary)] rounded-lg transition-colors"
                   >
                     <UserCheck className="w-4 h-4 text-[var(--accent-gold)]" />
-                    <span>الملف الشخصي</span>
+                    <span>{t.nav.profile}</span>
                   </Link>
-                  <button
-                    onClick={() => {
-                      toggleRole();
-                      setProfileDropdownOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--accent-gold)] hover:bg-[var(--bg-surface-elevated)] rounded-lg text-right transition-colors cursor-pointer"
-                  >
-                    <ArrowRightLeft className="w-4 h-4 text-[var(--accent-gold)]" />
-                    <span>التبديل إلى {isLawyer ? 'بوابة الموكل' : 'بوابة المحامي'}</span>
-                  </button>
                   <div className="my-1 border-t border-[var(--border-subtle)]" />
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-500 hover:bg-rose-500/10 rounded-lg text-right transition-colors cursor-pointer"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>تسجيل الخروج</span>
+                    <span>{t.nav.logout}</span>
                   </button>
                 </div>
               </div>
@@ -253,29 +235,26 @@ export default function Navbar() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-4 space-y-2 animate-in fade-in">
-          {currentNavLinks.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold ${
-                  isActive
-                    ? 'bg-[var(--bg-surface-elevated)] text-[var(--text-primary)] border border-[var(--accent-gold)]/40'
-                    : 'text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)]'
-                }`}
-              >
-                <span>{link.label}</span>
-                {link.badge !== undefined && link.badge > 0 ? (
-                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-600 text-slate-950 font-mono">
-                    {link.badge}
-                  </span>
-                ) : null}
-              </Link>
-            );
-          })}
+        <div className="md:hidden border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-4 space-y-2 animate-in slide-in-from-top-2">
+          {currentNavLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)]"
+            >
+              <span>{link.label}</span>
+              {link.badge !== undefined && link.badge > 0 && (
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-600 text-slate-950 font-mono">
+                  {link.badge}
+                </span>
+              )}
+            </Link>
+          ))}
+          <div className="pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between">
+            <span className="text-xs text-[var(--text-secondary)]">{t.common.switchLang}</span>
+            <LanguageToggle />
+          </div>
         </div>
       )}
     </header>
