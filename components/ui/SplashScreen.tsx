@@ -7,14 +7,14 @@ export default function SplashScreen() {
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
-    // Show splash for 700ms, then start 300ms fade out, then completely remove from DOM
+    // Show splash briefly (450ms), fade out (250ms), and disappear completely
     const fadeTimer = setTimeout(() => {
       setFading(true);
-    }, 700);
+    }, 450);
 
     const removeTimer = setTimeout(() => {
       setVisible(false);
-    }, 1000);
+    }, 750);
 
     return () => {
       clearTimeout(fadeTimer);
@@ -26,6 +26,7 @@ export default function SplashScreen() {
 
   return (
     <div
+      onClick={() => setVisible(false)}
       style={{
         position: 'fixed',
         inset: 0,
@@ -38,8 +39,8 @@ export default function SplashScreen() {
         alignItems: 'center',
         justifyContent: 'center',
         opacity: fading ? 0 : 1,
-        transition: 'opacity 300ms ease-out',
-        pointerEvents: 'none',
+        transition: 'opacity 250ms ease-out',
+        cursor: 'pointer',
         userSelect: 'none',
       }}
       dir="rtl"
@@ -141,7 +142,7 @@ export default function SplashScreen() {
               height: '100%',
               background: 'linear-gradient(90deg, #9e7b36, #dfba73, #c5a059)',
               borderRadius: '9999px',
-              transition: 'width 600ms ease-in-out',
+              transition: 'width 300ms ease-in-out',
             }}
           />
         </div>
