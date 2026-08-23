@@ -5,19 +5,14 @@ import Link from 'next/link';
 import { useApp } from '@/lib/context/AppContext';
 import { 
   FolderKanban, 
-  Sparkles, 
   Scale, 
   Users, 
   Calendar, 
-  Clock, 
   TrendingUp, 
   Award, 
-  ShieldCheck, 
   ChevronLeft, 
   FileText, 
-  AlertCircle,
-  CheckCircle2,
-  BookOpen
+  Gavel
 } from 'lucide-react';
 import CaseStatusBadge from '@/components/lawyer/CaseStatusBadge';
 
@@ -28,161 +23,166 @@ export default function LawyerDashboardPage() {
   const activeCases = cases.filter((c) => c.status === 'accepted' || c.status === 'in_court');
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8 animate-in fade-in duration-200">
       
-      {/* Header Banner */}
-      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/50 border border-slate-800 p-6 sm:p-8 shadow-2xl">
+      {/* Lawyer Command Center Header Banner */}
+      <div className="rounded-3xl legal-card p-6 sm:p-8 shadow-xl relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="max-w-2xl space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] text-xs font-semibold">
               <Award className="w-3.5 h-3.5" />
-              <span>بوابة المحامي الرقمية • قيد محكمة النقض والدستورية العليا</span>
+              <span>المكتب القضائي الرقمي · مقيد بجدول محكمة النقض</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              لوحة تحكم المكتب القضائي | {user.name} ⚖️
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+              لوحة تحكم المكتب القضائي | {user.name}
             </h1>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              استلم ملفات القضايا الجاهزة والمستخلصة آلياً من استشارات الموكلين مع الذكاء الاصطناعي، وتابع جلسات التقاضي وصياغة المذكرات القانونية.
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+              استقبال ملفات الدعاوى المستخلصة آلياً من استشارات الموكلين، متابعة أجندة الجلسات، وصياغة المذكرات القضائية بأحكام النقض.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3 shrink-0">
             <Link
               href="/lawyer/cases"
-              className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold shadow-lg shadow-amber-950/60 transition-all hover:scale-105"
+              className="flex items-center gap-2 px-5 py-3 rounded-xl btn-legal-gold text-xs font-bold"
             >
               <FolderKanban className="w-4 h-4" />
               <span>إدارة ملفات القضايا ({cases.length})</span>
             </Link>
             <Link
               href="/lawyer/ai-drafting"
-              className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-800/90 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold transition-all hover:scale-105"
+              className="flex items-center gap-2 px-5 py-3 rounded-xl btn-legal-navy text-xs font-bold"
             >
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              <span>صياغة مذكرة بالذكاء الاصطناعي</span>
+              <FileText className="w-4 h-4 text-[var(--accent-gold)]" />
+              <span>استوديو الصياغة القضائية</span>
             </Link>
           </div>
         </div>
-
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
       {/* KPI Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-medium">طلبات واردة جديدة (AI)</span>
-            <Sparkles className="w-4 h-4 text-emerald-400" />
+        <div className="p-5 rounded-2xl legal-card space-y-2">
+          <div className="flex items-center justify-between text-[var(--text-muted)]">
+            <span className="text-xs font-medium">طلبات واردة جديدة</span>
+            <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/20 flex items-center justify-center text-[var(--accent-gold)]">
+              <FolderKanban className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-emerald-400">
+          <div className="text-2xl sm:text-3xl font-black text-[var(--text-primary)]">
             {newIntakes.length}
           </div>
-          <p className="text-[11px] text-slate-400">ملخصات قضايا محولة من الموكلين</p>
+          <p className="text-[11px] text-[var(--text-muted)]">ملفات دعاوى جديدة بانتظار المراجعة</p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="p-5 rounded-2xl legal-card space-y-2">
+          <div className="flex items-center justify-between text-[var(--text-muted)]">
             <span className="text-xs font-medium">القضايا المتداولة والنشطة</span>
-            <Scale className="w-4 h-4 text-amber-400" />
+            <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-elevated)] border border-blue-500/20 flex items-center justify-center text-blue-400">
+              <Scale className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-white">
+          <div className="text-2xl sm:text-3xl font-black text-[var(--text-primary)]">
             {activeCases.length}
           </div>
-          <p className="text-[11px] text-slate-400">قضايا منظورة أمام المحاكم</p>
+          <p className="text-[11px] text-[var(--text-muted)]">دعاوى منظورة أمام دوائر المحاكم</p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="p-5 rounded-2xl legal-card space-y-2">
+          <div className="flex items-center justify-between text-[var(--text-muted)]">
             <span className="text-xs font-medium">نسبة كسب الأحكام</span>
-            <TrendingUp className="w-4 h-4 text-teal-400" />
+            <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-elevated)] border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <TrendingUp className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-teal-400">
+          <div className="text-2xl sm:text-3xl font-black text-emerald-500">
             94.2%
           </div>
-          <p className="text-[11px] text-slate-400">في القضايا العمالية والتجارية</p>
+          <p className="text-[11px] text-[var(--text-muted)]">في القضايا العمالية والتجارية</p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="p-5 rounded-2xl legal-card space-y-2">
+          <div className="flex items-center justify-between text-[var(--text-muted)]">
             <span className="text-xs font-medium">إجمالي الموكلين المسجلين</span>
-            <Users className="w-4 h-4 text-blue-400" />
+            <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-elevated)] border border-purple-500/20 flex items-center justify-center text-purple-400">
+              <Users className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-white">
+          <div className="text-2xl sm:text-3xl font-black text-[var(--text-primary)]">
             380+
           </div>
-          <p className="text-[11px] text-slate-400">استشارات وقضايا منفذة</p>
+          <p className="text-[11px] text-[var(--text-muted)]">استشارات وقضايا منفذة بالمكتب</p>
         </div>
 
       </div>
 
-      {/* Main Content Grid: Incoming AI Intakes Queue & Court Schedule */}
+      {/* Main Content Grid: Incoming Intakes Queue & Court Schedule */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Left 2 Cols: Incoming AI Case Intakes Queue */}
+        {/* Left 2 Cols: Incoming Case Intakes Queue */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-emerald-400" />
-              <h2 className="text-base font-bold text-white">
-                طلبات القضايا الواردة من المساعد الذكي (AI Case Intakes)
+              <FolderKanban className="w-5 h-5 text-[var(--accent-gold)]" />
+              <h2 className="text-base font-bold text-[var(--text-primary)]">
+                طلبات القضايا الواردة من الموكلين
               </h2>
               {newIntakes.length > 0 && (
-                <span className="text-xs bg-red-500 text-white font-bold px-2 py-0.5 rounded-full animate-pulse">
-                  {newIntakes.length} جديد
+                <span className="text-[11px] bg-amber-500/15 border border-amber-500/40 text-amber-500 font-bold px-2 py-0.5 rounded-full">
+                  {newIntakes.length} طلب جديد
                 </span>
               )}
             </div>
             <Link
               href="/lawyer/cases"
-              className="text-xs font-medium text-amber-400 hover:underline flex items-center gap-1"
+              className="text-xs font-semibold text-[var(--accent-gold)] hover:underline flex items-center gap-1"
             >
-              <span>عرض كل القضايا</span>
+              <span>عرض كافة القضايا</span>
               <ChevronLeft className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {cases.slice(0, 3).map((c) => (
               <div
                 key={c.id}
-                className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-slate-700 transition-all space-y-4 shadow-xl"
+                className="p-5 rounded-2xl legal-card space-y-4 shadow-lg"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <CaseStatusBadge status={c.status} />
-                      <span className="text-xs font-mono text-slate-400">{c.id}</span>
-                      <span className="text-[11px] text-slate-400">
-                        من: <strong className="text-white">{c.clientName}</strong> ({c.clientLocation})
+                      <span className="text-xs font-mono text-[var(--text-secondary)] bg-[var(--bg-input)] px-2 py-0.5 rounded border border-[var(--border-subtle)]">{c.id}</span>
+                      <span className="text-xs text-[var(--text-secondary)]">
+                        الموكل: <strong className="text-[var(--text-primary)]">{c.clientName}</strong> ({c.clientLocation})
                       </span>
                     </div>
-                    <h3 className="text-sm font-bold text-white">{c.title}</h3>
+                    <h3 className="text-sm font-bold text-[var(--text-primary)]">{c.title}</h3>
                   </div>
 
-                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full shrink-0 ${
+                  <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0 ${
                     c.urgency === 'urgent'
-                      ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                      ? 'bg-rose-500/15 text-rose-500 border border-rose-500/30'
                       : c.urgency === 'high'
-                      ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                      : 'bg-slate-800 text-slate-300'
+                      ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30'
+                      : 'bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)]'
                   }`}>
-                    {c.urgency === 'urgent' ? '🚨 أولوية قصوى' : c.urgency === 'high' ? '⚡ عاجل' : 'عادي'}
+                    {c.urgency === 'urgent' ? 'أولوية قصوى' : c.urgency === 'high' ? 'عاجل' : 'عادي'}
                   </span>
                 </div>
 
-                {/* AI Executive Summary Preview */}
-                <div className="p-3.5 rounded-2xl bg-slate-800/50 border border-slate-700/50 text-xs text-slate-300 leading-relaxed">
-                  <div className="flex items-center gap-1.5 font-bold text-emerald-400 mb-1">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>ملخص الذكاء الاصطناعي:</span>
-                  </div>
-                  <p className="line-clamp-2">{c.executiveSummary}</p>
+                {/* Executive Summary Preview */}
+                <div className="p-3.5 rounded-xl bg-[var(--bg-input)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] leading-relaxed">
+                  <span className="font-bold text-[var(--accent-gold)] block mb-1">
+                    ملخص الواقعة القانونية:
+                  </span>
+                  <p className="line-clamp-2 text-[var(--text-primary)]">{c.executiveSummary}</p>
                 </div>
 
                 {/* Footer Controls */}
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 gap-3">
-                  <div className="text-[11px] text-slate-400 flex items-center gap-2">
+                <div className="flex items-center justify-between pt-2 border-t border-[var(--border-subtle)] gap-3 text-xs">
+                  <div className="text-[11px] text-[var(--text-muted)] flex items-center gap-2">
                     <span>الهاتف: {c.clientPhone}</span>
                     <span>• {new Date(c.createdAt).toLocaleDateString('ar-EG')}</span>
                   </div>
@@ -190,15 +190,15 @@ export default function LawyerDashboardPage() {
                   <div className="flex items-center gap-2">
                     {c.status === 'new_intake' && (
                       <button
-                        onClick={() => updateCaseStatus(c.id, 'accepted', 'تمت مراجعة الملخص وقبول القضية لتجهيز صحيفة الدعوى')}
-                        className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-colors"
+                        onClick={() => updateCaseStatus(c.id, 'accepted', 'تمت مراجعة وقائع القضية وقبولها لتجهيز صحيفة الدعوى')}
+                        className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors cursor-pointer"
                       >
                         قبول القضية
                       </button>
                     )}
                     <Link
                       href={`/lawyer/cases/${c.id}`}
-                      className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors"
+                      className="px-3.5 py-1.5 rounded-xl bg-[var(--bg-surface-elevated)] hover:bg-[var(--bg-surface-hover)] text-[var(--text-primary)] text-xs font-semibold border border-[var(--border-subtle)] transition-colors"
                     >
                       فتح الملف الكامل
                     </Link>
@@ -209,58 +209,58 @@ export default function LawyerDashboardPage() {
           </div>
         </div>
 
-        {/* Right 1 Col: Upcoming Calendar & Quick Drafting Tool */}
+        {/* Right 1 Col: Upcoming Court Schedule & Quick Studio */}
         <div className="space-y-6">
           
           {/* Upcoming Court Sessions */}
-          <div className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-4">
+          <div className="p-6 rounded-3xl legal-card space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 font-bold text-sm text-white">
-                <Calendar className="w-4 h-4 text-purple-400" />
-                <span>أجندة الجلسات القادمة</span>
+              <div className="flex items-center gap-2 font-bold text-sm text-[var(--text-primary)]">
+                <Calendar className="w-4 h-4 text-[var(--accent-gold)]" />
+                <span>أجندة الجلسات القضائية</span>
               </div>
-              <span className="text-[11px] text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full">
-                3 جلسات هذا الأسبوع
+              <span className="text-[11px] text-[var(--accent-gold)] bg-[var(--bg-surface-elevated)] px-2 py-0.5 rounded-full border border-[var(--accent-gold)]/20">
+                هذا الأسبوع
               </span>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-2xl bg-slate-800/50 border border-slate-700/60 space-y-1">
+              <div className="p-3.5 rounded-2xl bg-[var(--bg-input)] border border-[var(--border-subtle)] space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-purple-300">الأحد 17 أغسطس</span>
-                  <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded">
-                    محكمة شمال القاهرة
+                  <span className="font-bold text-[var(--accent-gold)]">الأحد 17 أغسطس</span>
+                  <span className="text-[10px] bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)] px-2 py-0.5 rounded">
+                    شمال القاهرة
                   </span>
                 </div>
-                <p className="font-semibold text-white">جلسة نطق بالحكم - دعوى تعويض عمالي</p>
-                <p className="text-[11px] text-slate-400">القضية رقم: 4421/2023 عمالي كلي</p>
+                <p className="font-semibold text-[var(--text-primary)]">جلسة مرافعة - دعوى تعويض عمالي</p>
+                <p className="text-[11px] text-[var(--text-muted)] font-mono">القضية رقم: 4421/2024 عمالي كلي</p>
               </div>
 
-              <div className="p-3 rounded-2xl bg-slate-800/50 border border-slate-700/60 space-y-1">
+              <div className="p-3.5 rounded-2xl bg-[var(--bg-input)] border border-[var(--border-subtle)] space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-purple-300">الثلاثاء 19 أغسطس</span>
-                  <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded">
+                  <span className="font-bold text-[var(--accent-gold)]">الثلاثاء 19 أغسطس</span>
+                  <span className="text-[10px] bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)] px-2 py-0.5 rounded">
                     المحكمة الاقتصادية
                   </span>
                 </div>
-                <p className="font-semibold text-white">جلسة خبير حسابي - نزاع عقد شراكة</p>
-                <p className="text-[11px] text-slate-400">القضية رقم: 1089/2024 اقتصادي</p>
+                <p className="font-semibold text-[var(--text-primary)]">جلسة خبير حسابي - نزاع عقد توريد</p>
+                <p className="text-[11px] text-[var(--text-muted)] font-mono">القضية رقم: 1089/2024 اقتصادي</p>
               </div>
             </div>
           </div>
 
           {/* Quick Legal Drafting Banner */}
-          <div className="p-5 rounded-3xl bg-gradient-to-br from-indigo-950/60 via-slate-900 to-slate-900 border border-indigo-500/30 shadow-xl space-y-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-indigo-400" />
+          <div className="p-6 rounded-3xl bg-[var(--bg-input)] border border-[var(--accent-gold)]/30 space-y-3.5">
+            <div className="w-10 h-10 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 flex items-center justify-center text-[var(--accent-gold)]">
+              <Gavel className="w-5 h-5" />
             </div>
-            <h3 className="text-sm font-bold text-white">مساعد الصياغة القانونية الذكية</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              قم بتوليد صحف الدعاوى، المذكرات الجوابية، والإنذارات الرسمية بأسلوب قضائي رصين مع الإحالة التلقائية لمواد القانون وأحكام النقض.
+            <h3 className="text-sm font-bold text-[var(--text-primary)]">استوديو الصياغة القضائية</h3>
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              صياغة مذكرات الدفاع والإنذارات الرسمية وعرائض الدعاوى بأسلوب قضائي رصين مع الإحالة التلقائية لمواد القانون وأحكام النقض.
             </p>
             <Link
               href="/lawyer/ai-drafting"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-400 hover:text-indigo-300"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent-gold)] hover:underline"
             >
               <span>فتح استوديو الصياغة</span>
               <ChevronLeft className="w-3.5 h-3.5" />

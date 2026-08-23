@@ -16,9 +16,8 @@ import {
   CheckCircle2, 
   Edit3, 
   Save, 
-  Share2,
-  Calendar,
-  DollarSign
+  DollarSign,
+  Scale
 } from 'lucide-react';
 
 export default function LawyerProfilePage() {
@@ -37,29 +36,31 @@ export default function LawyerProfilePage() {
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto animate-in fade-in duration-300">
+    <div className="space-y-8 max-w-5xl mx-auto animate-in fade-in duration-200">
       
       {/* Top Banner Card */}
-      <div className="relative rounded-3xl overflow-hidden bg-slate-900/90 border border-slate-800 shadow-2xl p-6 sm:p-8 space-y-6">
+      <div className="rounded-3xl bg-[#0b1224] border border-slate-800 shadow-xl p-6 sm:p-8 space-y-6">
         
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-right">
-            <img
-              src={activeLawyer.avatar}
-              alt={activeLawyer.name}
-              className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover ring-4 ring-amber-500/40 shadow-2xl shrink-0"
-            />
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-[#111c38] border-2 border-[#c5a059]/40 p-1 flex items-center justify-center shrink-0 overflow-hidden shadow-xl">
+              <img
+                src={activeLawyer.avatar}
+                alt={activeLawyer.name}
+                className="w-full h-full object-cover rounded-2xl"
+              />
+            </div>
             <div className="space-y-2">
               <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
                 <h1 className="text-xl sm:text-2xl font-extrabold text-white">
                   {activeLawyer.name}
                 </h1>
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#111c38] border border-[#c5a059]/30 text-[#dfba73]">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   مقيد بالنقض والدستورية
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-amber-300 font-medium">{activeLawyer.title}</p>
+              <p className="text-xs sm:text-sm text-[#dfba73] font-medium">{activeLawyer.title}</p>
               
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-slate-400">
                 <span className="flex items-center gap-1">
@@ -76,7 +77,7 @@ export default function LawyerProfilePage() {
             {isEditing ? (
               <button
                 onClick={handleSave}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl btn-legal-gold text-xs font-bold cursor-pointer"
               >
                 <Save className="w-4 h-4" />
                 <span>حفظ التغييرات</span>
@@ -84,10 +85,10 @@ export default function LawyerProfilePage() {
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl btn-legal-navy text-xs font-semibold cursor-pointer"
               >
-                <Edit3 className="w-4 h-4 text-amber-400" />
-                <span>تعديل الملف</span>
+                <Edit3 className="w-4 h-4 text-[#dfba73]" />
+                <span>تعديل الملف المهني</span>
               </button>
             )}
           </div>
@@ -95,33 +96,33 @@ export default function LawyerProfilePage() {
 
         {/* Stats Row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-800 text-center">
-          <div className="p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40">
-            <div className="text-xl font-extrabold text-amber-400 flex items-center justify-center gap-1">
-              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+          <div className="p-3.5 rounded-2xl bg-[#080e1c] border border-slate-800">
+            <div className="text-lg font-black text-[#dfba73] flex items-center justify-center gap-1">
+              <Star className="w-4 h-4 fill-[#dfba73] text-[#dfba73]" />
               <span>{activeLawyer.rating}</span>
             </div>
             <span className="text-[10px] text-slate-400">({activeLawyer.reviewCount} تقييم موثق)</span>
           </div>
 
-          <div className="p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40">
-            <div className="text-xl font-extrabold text-emerald-400">
+          <div className="p-3.5 rounded-2xl bg-[#080e1c] border border-slate-800">
+            <div className="text-lg font-black text-emerald-400">
               {activeLawyer.winRate}%
             </div>
-            <span className="text-[10px] text-slate-400">نسبة نجاح الأحكام</span>
+            <span className="text-[10px] text-slate-400">نسبة كسب الأحكام</span>
           </div>
 
-          <div className="p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40">
-            <div className="text-xl font-extrabold text-white">
+          <div className="p-3.5 rounded-2xl bg-[#080e1c] border border-slate-800">
+            <div className="text-lg font-black text-white">
               +{activeLawyer.experienceYears} عاماً
             </div>
             <span className="text-[10px] text-slate-400">الخبرة القضائية</span>
           </div>
 
-          <div className="p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40">
-            <div className="text-xl font-extrabold text-teal-400">
+          <div className="p-3.5 rounded-2xl bg-[#080e1c] border border-slate-800">
+            <div className="text-lg font-black text-[#dfba73]">
               {activeLawyer.totalResolvedCases}+
             </div>
-            <span className="text-[10px] text-slate-400">قضية منجزة بنجاح</span>
+            <span className="text-[10px] text-slate-400">دعوى مفصولة بحكم</span>
           </div>
         </div>
 
@@ -134,9 +135,9 @@ export default function LawyerProfilePage() {
         <div className="space-y-6">
           
           {/* Bio & Specialties */}
-          <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-4">
+          <div className="p-6 rounded-3xl legal-card space-y-4 shadow-lg">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-amber-400" />
+              <GraduationCap className="w-4 h-4 text-[#dfba73]" />
               <span>النبذة المهنية والتخصصات</span>
             </h3>
 
@@ -145,13 +146,13 @@ export default function LawyerProfilePage() {
                 rows={4}
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                className="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white"
+                className="w-full p-3 rounded-xl bg-[#080e1c] border border-slate-700 text-xs text-white"
               />
             ) : (
               <p className="text-xs text-slate-300 leading-relaxed">{bio}</p>
             )}
 
-            <div className="space-y-2 pt-2 border-t border-slate-800">
+            <div className="space-y-2 pt-3 border-t border-slate-800">
               <span className="text-xs font-semibold text-slate-400 block">مجالات الترافع المعتمدة:</span>
               <div className="flex flex-wrap gap-1.5">
                 {activeLawyer.specialties.map((specKey) => {
@@ -159,7 +160,7 @@ export default function LawyerProfilePage() {
                   return (
                     <span
                       key={specKey}
-                      className="text-[10px] font-bold bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700"
+                      className="text-[10px] font-bold bg-[#111c38] text-[#dfba73] border border-[#c5a059]/20 px-2.5 py-1 rounded-lg"
                     >
                       {spec ? spec.labelAr : specKey}
                     </span>
@@ -170,13 +171,13 @@ export default function LawyerProfilePage() {
           </div>
 
           {/* Consultation Fee & Contact Info */}
-          <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-4">
+          <div className="p-6 rounded-3xl legal-card space-y-4 shadow-lg">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-emerald-400" />
-              <span>أتعاب الاستشارة وبيانات التواصل</span>
+              <Scale className="w-4 h-4 text-[#dfba73]" />
+              <span>أتعاب الاستشارة وبيانات الاتصال</span>
             </h3>
 
-            <div className="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/20 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-[#080e1c] border border-[#c5a059]/25 flex items-center justify-between">
               <div>
                 <span className="text-[11px] text-slate-400 block">قيمة الاستشارة المبدئية</span>
                 <span className="text-lg font-extrabold text-white">
@@ -185,15 +186,15 @@ export default function LawyerProfilePage() {
                       type="number"
                       value={fee}
                       onChange={(e) => setFee(Number(e.target.value))}
-                      className="w-24 p-1 rounded bg-slate-800 border border-slate-700 text-sm"
+                      className="w-24 p-1 rounded bg-[#0b1224] border border-slate-700 text-sm"
                     />
                   ) : (
                     `${fee} ج.م`
                   )}
                 </span>
               </div>
-              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">
-                شاملة دراسة ملف القضية
+              <span className="text-[10px] text-[#dfba73] bg-[#111c38] px-2 py-1 rounded border border-[#c5a059]/20 font-medium">
+                شاملة دراسة الأوراق
               </span>
             </div>
 
@@ -219,17 +220,17 @@ export default function LawyerProfilePage() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Featured Landmark Cases */}
-          <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-4">
+          <div className="p-6 rounded-3xl legal-card space-y-4 shadow-lg">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-amber-400" />
-              <span>سجل القضايا الكبرى والأحكام الباتة المكتسبة</span>
+              <Briefcase className="w-4 h-4 text-[#dfba73]" />
+              <span>سجل القضايا والأحكام القضائية الباتة</span>
             </h3>
 
             <div className="space-y-3">
               {activeLawyer.featuredCases.map((fc, idx) => (
                 <div
                   key={idx}
-                  className="p-4 rounded-2xl bg-slate-800/50 border border-slate-700/60 space-y-2"
+                  className="p-4 rounded-2xl bg-[#080e1c] border border-slate-800 space-y-2"
                 >
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-bold text-white">{fc.title}</h4>
@@ -245,28 +246,29 @@ export default function LawyerProfilePage() {
           </div>
 
           {/* Client Testimonials */}
-          <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-4">
+          <div className="p-6 rounded-3xl legal-card space-y-4 shadow-lg">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Star className="w-4 h-4 text-amber-400" />
-              <span>آراء وتقييمات الموكلين الموثقة</span>
+              <Star className="w-4 h-4 text-[#dfba73]" />
+              <span>آراء وتقييمات الموكلين المعتمدة</span>
             </h3>
 
             <div className="space-y-3">
               {activeLawyer.reviews.map((rev) => (
                 <div
                   key={rev.id}
-                  className="p-4 rounded-2xl bg-slate-800/50 border border-slate-700/60 space-y-2"
+                  className="p-4 rounded-2xl bg-[#080e1c] border border-slate-800 space-y-2"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-white">{rev.clientName}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-slate-700 text-slate-300">
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-[#111c38] text-[#dfba73]">
                         {rev.caseCategory}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-amber-400 font-bold">
-                      <span>⭐ {rev.rating}</span>
-                      <span className="text-[10px] text-slate-500 font-normal">• {rev.date}</span>
+                    <div className="flex items-center gap-1 text-xs text-[#dfba73] font-bold">
+                      <Star className="w-3.5 h-3.5 fill-[#dfba73]" />
+                      <span>{rev.rating}</span>
+                      <span className="text-[10px] text-slate-500 font-normal mr-2">• {rev.date}</span>
                     </div>
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed font-serif">

@@ -18,8 +18,8 @@ export default function DashboardRedirectPage() {
   }, [role, router]);
 
   return (
-    <div className="min-h-screen bg-[#070D1E] text-slate-100 flex flex-col items-center justify-center gap-4">
-      <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+    <div className="min-h-screen bg-[#060a14] text-slate-100 flex flex-col items-center justify-center gap-4">
+      <Loader2 className="w-8 h-8 text-[#c5a059] animate-spin" />
       <p className="text-xs text-slate-400">جاري التوجيه إلى لوحة التحكم المخصصة...</p>
     </div>
   );

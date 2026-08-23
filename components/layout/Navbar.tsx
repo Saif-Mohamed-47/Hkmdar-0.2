@@ -2,215 +2,178 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useApp } from '@/lib/context/AppContext';
 import { 
-  Scale, 
-  Sparkles, 
   UserCheck, 
-  Briefcase, 
   ArrowRightLeft, 
   Bell, 
   ChevronDown, 
-  BookOpen, 
-  MessageSquare, 
-  Users, 
-  FolderKanban,
-  FileText,
-  ShieldAlert,
-  Search
+  LogOut, 
+  Menu, 
+  X 
 } from 'lucide-react';
+import { signOutUser } from '@/lib/supabaseClient';
+import ThemeToggle from '@/components/ui/ThemeToggle';
+
+interface NavLinkItem {
+  href: string;
+  label: string;
+  badge?: number;
+}
 
 export default function Navbar() {
-  const { role, user, setRole, cases, lang, setLang } = useApp();
+  const { role, user, setRole, cases, addToast } = useApp();
   const pathname = usePathname();
+  const router = useRouter();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const pendingCasesCount = cases.filter((c) => c.status === 'new_intake').length;
   const isLawyer = role === 'lawyer';
 
   const toggleRole = () => {
-    setRole(isLawyer ? 'client' : 'lawyer');
+    const nextRole = isLawyer ? 'client' : 'lawyer';
+    setRole(nextRole);
+    router.push(nextRole === 'lawyer' ? '/lawyer/dashboard' : '/client/dashboard');
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOutUser();
+      addToast({
+        type: 'info',
+        title: 'تم تسجيل الخروج',
+        message: 'تم إنهاء الجلسة بنجاح.',
+      });
+      router.push('/login');
+    } catch (e) {
+      router.push('/login');
+    }
+  };
+
+  const clientNavLinks: NavLinkItem[] = [
+    { href: '/client/dashboard', label: 'الرئيسية' },
+    { href: '/client/ai-chat', label: 'المستشار القانوني' },
+    { href: '/client/legal-research', label: 'البحث في التشريعات' },
+    { href: '/client/lawyers', label: 'دليل المحامين' },
+    { href: '/client/my-cases', label: 'ملفات قضاياي' },
+  ];
+
+  const lawyerNavLinks: NavLinkItem[] = [
+    { href: '/lawyer/dashboard', label: 'لوحة التحكم' },
+    { href: '/lawyer/cases', label: 'ملفات القضايا', badge: pendingCasesCount },
+    { href: '/lawyer/ai-drafting', label: 'الصياغة القضائية' },
+    { href: '/lawyer/profile', label: 'الملف المهني' },
+  ];
+
+  const currentNavLinks = isLawyer ? lawyerNavLinks : clientNavLinks;
+
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-[#070D1E]/80 backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-40 w-full border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/95 backdrop-blur-md transition-colors duration-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
         
         {/* Brand & Logo */}
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-500 p-0.5 shadow-lg shadow-emerald-900/30 group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-[#0B132B] rounded-[10px] flex items-center justify-center">
-                <Scale className="w-5 h-5 text-emerald-400 group-hover:text-amber-400 transition-colors" />
-              </div>
+            <div className="w-10 h-10 rounded-xl bg-[var(--bg-input)] border border-[var(--accent-gold)]/40 p-1 flex items-center justify-center shadow-md group-hover:border-[var(--accent-gold)] transition-colors">
+              <img src="/hakmdar-logo.png" alt="حكمدار" className="w-full h-full object-contain" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
-                  حكمدار
-                </span>
-              </div>
+              <span className="font-extrabold text-lg tracking-tight text-[var(--text-primary)] block leading-none">
+                حُكْمَدَار
+              </span>
+              <span className="text-[10px] text-[var(--accent-gold)] font-medium">
+                {isLawyer ? 'بوابة المحامي' : 'بوابة الموكل'}
+              </span>
             </div>
           </Link>
 
-          {/* Quick Nav Links (Role-Aware) */}
+          {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-1">
-            {!isLawyer ? (
-              <>
+            {currentNavLinks.map((link) => {
+              const isActive = pathname === link.href || (link.href !== '/lawyer/dashboard' && link.href !== '/client/dashboard' && pathname.startsWith(link.href));
+              return (
                 <Link
-                  href="/client/dashboard"
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    pathname === '/client/dashboard'
-                      ? 'bg-slate-800 text-emerald-400'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+                  key={link.href}
+                  href={link.href}
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+                    isActive
+                      ? 'bg-[var(--bg-surface-elevated)] text-[var(--text-primary)] border border-[var(--accent-gold)]/40 shadow-sm'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)]'
                   }`}
                 >
-                  الرئيسية
-                </Link>
-                <Link
-                  href="/client/ai-chat"
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    pathname === '/client/ai-chat'
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-                  }`}
-                >
-                  المستشار القانوني الذكي
-                </Link>
-                <Link
-                  href="/client/legal-research"
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    pathname === '/client/legal-research'
-                      ? 'bg-slate-800 text-emerald-400'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-                  }`}
-                >
-                  البحث في التشريعات
-                </Link>
-                <Link
-                  href="/client/lawyers"
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    pathname === '/client/lawyers'
-                      ? 'bg-slate-800 text-emerald-400'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-                  }`}
-                >
-                  دليل وترشيح المحامين
-                </Link>
-                <Link
-                  href="/client/my-cases"
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    pathname === '/client/my-cases'
-                      ? 'bg-slate-800 text-emerald-400'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-                  }`}
-                >
-                  قضاياي
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/lawyer/dashboard"
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    pathname === '/lawyer/dashboard'
-                      ? 'bg-slate-800 text-amber-400'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-                  }`}
-                >
-                  لوحة تحكم المحامي
-                </Link>
-                <Link
-                  href="/lawyer/cases"
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors relative ${
-                    pathname.startsWith('/lawyer/cases')
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-                  }`}
-                >
-                  <FolderKanban className="w-4 h-4 text-amber-400" />
-                  ملفات القضايا والطلبات
-                  {pendingCasesCount > 0 && (
-                    <span className="px-1.5 py-0.2 text-[11px] font-bold rounded-full bg-red-500 text-white">
-                      {pendingCasesCount}
+                  <span>{link.label}</span>
+                  {link.badge !== undefined && link.badge > 0 ? (
+                    <span className="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-amber-600 text-slate-950 font-mono">
+                      {link.badge}
                     </span>
-                  )}
+                  ) : null}
                 </Link>
-                <Link
-                  href="/lawyer/profile"
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    pathname === '/lawyer/profile'
-                      ? 'bg-slate-800 text-amber-400'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-                  }`}
-                >
-                  الملف المهني
-                </Link>
-                <Link
-                  href="/lawyer/ai-drafting"
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    pathname === '/lawyer/ai-drafting'
-                      ? 'bg-slate-800 text-emerald-400'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-                  }`}
-                >
-                  <Sparkles className="w-4 h-4 text-emerald-400" />
-                  الصياغة القانونية الذكية
-                </Link>
-              </>
-            )}
+              );
+            })}
           </nav>
         </div>
 
-        {/* Right Side: Notifications + User Avatar */}
-        <div className="flex items-center gap-3">
+        {/* Right Side: Theme Toggle + Role Switcher + Notifications + Profile */}
+        <div className="flex items-center gap-2.5">
           
-          {/* User Role Badge */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 text-xs">
-            <span className={`w-2 h-2 rounded-full ${isLawyer ? 'bg-amber-400' : 'bg-emerald-400'}`} />
-            <span className="text-slate-300 font-medium">{isLawyer ? 'بوابة المحامي ⚖️' : 'بوابة الموكل 👤'}</span>
-          </div>
+          {/* Global Theme Toggle */}
+          <ThemeToggle />
 
-          {/* Notifications Button */}
+          {/* Active Role Badge & Switcher */}
+          <button
+            onClick={toggleRole}
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 text-xs text-[var(--text-primary)] hover:border-[var(--accent-gold)] transition-colors cursor-pointer"
+            title="التبديل بين دور المحامي ودور الموكل"
+          >
+            <span className="w-2 h-2 rounded-full bg-[var(--accent-gold)]" />
+            <span className="font-medium text-xs">
+              {isLawyer ? 'حساب محامٍ' : 'حساب موكل'}
+            </span>
+            <ArrowRightLeft className="w-3 h-3 text-[var(--accent-gold)]" />
+          </button>
+
+          {/* Notifications Popover */}
           <div className="relative">
             <button
               onClick={() => setNotificationsOpen(!notificationsOpen)}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 relative transition-colors"
+              className="p-2.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] relative transition-colors border border-[var(--border-subtle)] cursor-pointer"
+              aria-label="الإشعارات"
             >
-              <Bell className="w-5 h-5" />
+              <Bell className="w-4 h-4" />
               {pendingCasesCount > 0 && isLawyer && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-[#070D1E] animate-ping" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[var(--accent-gold)]" />
               )}
             </button>
 
             {notificationsOpen && (
-              <div className="absolute left-0 mt-2 w-80 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                  <h4 className="text-xs font-bold text-slate-300">الإشعارات والتحديثات</h4>
-                  <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+              <div className="absolute left-0 mt-2 w-80 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-card)] shadow-2xl p-4 z-50 animate-in fade-in">
+                <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+                  <h4 className="text-xs font-bold text-[var(--text-primary)]">إشعارات القضايا</h4>
+                  <span className="text-[10px] text-[var(--accent-gold)] bg-[var(--bg-surface-elevated)] px-2 py-0.5 rounded-full border border-[var(--accent-gold)]/20">
                     مباشر
                   </span>
                 </div>
                 <div className="mt-3 space-y-2 max-h-64 overflow-y-auto">
                   {isLawyer ? (
-                    cases.slice(0, 3).map((c) => (
+                    cases.slice(0, 4).map((c) => (
                       <Link
                         key={c.id}
                         href={`/lawyer/cases/${c.id}`}
                         onClick={() => setNotificationsOpen(false)}
-                        className="block p-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/40 transition-colors"
+                        className="block p-3 rounded-xl bg-[var(--bg-input)] hover:bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] transition-colors text-right"
                       >
-                        <p className="text-xs font-semibold text-white truncate">{c.title}</p>
-                        <p className="text-[11px] text-slate-400 mt-1">
-                          من: {c.clientName} • {c.urgency === 'urgent' ? '🚨 عاجل جداً' : '⚡ طلب وارد'}
+                        <p className="text-xs font-bold text-[var(--text-primary)] truncate">{c.title}</p>
+                        <p className="text-[11px] text-[var(--text-secondary)] mt-1">
+                          الموكل: {c.clientName} • {c.urgency === 'urgent' ? 'أولوية قصوى' : 'طلب وارد'}
                         </p>
                       </Link>
                     ))
                   ) : (
-                    <div className="p-3 text-center text-xs text-slate-400">
-                      لا توجد إشعارات جديدة حالياً
+                    <div className="p-4 text-center text-xs text-[var(--text-muted)]">
+                      لا توجد تنبيهات جديدة في الوقت الحالي
                     </div>
                   )}
                 </div>
@@ -222,70 +185,99 @@ export default function Navbar() {
           <div className="relative">
             <button
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              className="flex items-center gap-2.5 p-1.5 pr-2.5 rounded-full bg-slate-800/80 border border-slate-700/60 hover:border-slate-600 transition-all"
+              className="flex items-center gap-2.5 p-1.5 pr-3 rounded-full bg-[var(--bg-input)] border border-[var(--border-subtle)] hover:border-[var(--accent-gold)]/40 transition-all cursor-pointer"
             >
-              <img
-                src={user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100'}
-                alt={user.name}
-                className="w-7 h-7 rounded-full object-cover ring-1 ring-emerald-500/40"
-              />
-              <span className="text-xs font-medium text-slate-200 hidden sm:block max-w-[110px] truncate">
-                {user.name.split(' ')[0]}
+              <div className="w-7 h-7 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 flex items-center justify-center text-[var(--accent-gold)] font-bold text-xs">
+                {user.name ? user.name[0] : 'ح'}
+              </div>
+              <span className="text-xs font-semibold text-[var(--text-primary)] hidden sm:block max-w-[120px] truncate">
+                {user.name || 'المستخدم'}
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              <ChevronDown className="w-3.5 h-3.5 text-[var(--text-muted)]" />
             </button>
 
             {profileDropdownOpen && (
-              <div className="absolute left-0 mt-2 w-56 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-2 z-50">
-                <div className="p-2 border-b border-slate-800">
-                  <p className="text-xs font-bold text-white truncate">{user.name}</p>
-                  <p className="text-[10px] text-slate-400 truncate">{user.email}</p>
-                  <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
-                    {isLawyer ? 'محامٍ معتمد بالنقض' : 'حساب موكل موثق'}
+              <div className="absolute left-0 mt-2 w-60 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-card)] shadow-2xl p-2 z-50 text-right animate-in fade-in">
+                <div className="p-3 border-b border-[var(--border-subtle)]">
+                  <p className="text-xs font-bold text-[var(--text-primary)] truncate">{user.name}</p>
+                  <p className="text-[10px] text-[var(--text-muted)] truncate mt-0.5">{user.email}</p>
+                  <span className="inline-block mt-2 text-[10px] font-semibold px-2 py-0.5 rounded bg-[var(--bg-surface-elevated)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/20">
+                    {isLawyer ? 'حساب محامٍ معتمد' : 'حساب موكل موثق'}
                   </span>
                 </div>
 
-                <div className="py-1 space-y-0.5">
+                <div className="py-1 space-y-1">
                   <Link
                     href={isLawyer ? '/lawyer/profile' : '/client/dashboard'}
                     onClick={() => setProfileDropdownOpen(false)}
-                    className="flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 rounded-lg"
+                    className="flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-surface-elevated)] hover:text-[var(--text-primary)] rounded-lg transition-colors"
                   >
-                    <UserCheck className="w-4 h-4 text-emerald-400" />
-                    الملف الشخصي
+                    <UserCheck className="w-4 h-4 text-[var(--accent-gold)]" />
+                    <span>الملف الشخصي</span>
                   </Link>
                   <button
                     onClick={() => {
                       toggleRole();
                       setProfileDropdownOpen(false);
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-amber-300 hover:bg-slate-800 rounded-lg text-right"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--accent-gold)] hover:bg-[var(--bg-surface-elevated)] rounded-lg text-right transition-colors cursor-pointer"
                   >
-                    <ArrowRightLeft className="w-4 h-4 text-amber-400" />
-                    التبديل إلى {isLawyer ? 'حساب الموكل' : 'حساب المحامي'}
+                    <ArrowRightLeft className="w-4 h-4 text-[var(--accent-gold)]" />
+                    <span>التبديل إلى {isLawyer ? 'بوابة الموكل' : 'بوابة المحامي'}</span>
                   </button>
-                  <div className="my-1 border-t border-slate-800" />
-                  <Link
-                    href="/login"
-                    onClick={() => setProfileDropdownOpen(false)}
-                    className="flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg"
+                  <div className="my-1 border-t border-[var(--border-subtle)]" />
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-500 hover:bg-rose-500/10 rounded-lg text-right transition-colors cursor-pointer"
                   >
-                    <span>تسجيل الدخول</span>
-                  </Link>
-                  <Link
-                    href="/register"
-                    onClick={() => setProfileDropdownOpen(false)}
-                    className="flex items-center gap-2 px-3 py-2 text-xs text-emerald-400 hover:bg-slate-800 rounded-lg font-bold"
-                  >
-                    <span>إنشاء حساب جديد</span>
-                  </Link>
+                    <LogOut className="w-4 h-4" />
+                    <span>تسجيل الخروج</span>
+                  </button>
                 </div>
               </div>
             )}
           </div>
+
+          {/* Mobile Hamburger Toggle */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] cursor-pointer"
+            aria-label="القائمة الرئيسية"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+
         </div>
 
       </div>
+
+      {/* Mobile Drawer Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-4 space-y-2 animate-in fade-in">
+          {currentNavLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold ${
+                  isActive
+                    ? 'bg-[var(--bg-surface-elevated)] text-[var(--text-primary)] border border-[var(--accent-gold)]/40'
+                    : 'text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)]'
+                }`}
+              >
+                <span>{link.label}</span>
+                {link.badge !== undefined && link.badge > 0 ? (
+                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-600 text-slate-950 font-mono">
+                    {link.badge}
+                  </span>
+                ) : null}
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </header>
   );
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { CaseStatus } from '@/lib/types';
-import { Clock, CheckCircle2, ShieldCheck, Gavel, Archive, Sparkles } from 'lucide-react';
+import { Clock, CheckCircle2, ShieldCheck, Gavel, Archive, Sparkles, FileText } from 'lucide-react';
 
 interface Props {
   status: CaseStatus;
@@ -8,35 +8,35 @@ interface Props {
 }
 
 export default function CaseStatusBadge({ status, size = 'sm' }: Props) {
-  const config = {
+  const config: Record<CaseStatus, { label: string; bg: string; icon: React.ElementType }> = {
     new_intake: {
-      label: 'طلب جديد (AI Intake)',
-      bg: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300',
+      label: 'طلب وارد جديد',
+      bg: 'bg-amber-500/10 border-amber-500/30 text-amber-300',
       icon: Sparkles,
     },
     under_review: {
       label: 'قيد الدراسة والمراجعة',
-      bg: 'bg-amber-500/15 border-amber-500/30 text-amber-300',
+      bg: 'bg-slate-800 border-slate-700 text-slate-300',
       icon: Clock,
     },
     accepted: {
-      label: 'مقبولة وتجهيز الدعوى',
-      bg: 'bg-blue-500/15 border-blue-500/30 text-blue-300',
-      icon: ShieldCheck,
+      label: 'مقبولة وقيد إعداد الدعوى',
+      bg: 'bg-blue-500/10 border-blue-500/30 text-blue-300',
+      icon: FileText,
     },
     in_court: {
-      label: 'متداولة بالجلسات',
-      bg: 'bg-purple-500/15 border-purple-500/30 text-purple-300',
+      label: 'منظورة أمام المحكمة',
+      bg: 'bg-purple-500/10 border-purple-500/30 text-purple-300',
       icon: Gavel,
     },
     resolved: {
-      label: 'تم كسب الحكم / التسوية',
-      bg: 'bg-teal-500/15 border-teal-500/30 text-teal-300',
+      label: 'تم كسب الحكم / إنهاء النزاع',
+      bg: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
       icon: CheckCircle2,
     },
     closed: {
       label: 'مغلقة ومؤرشفة',
-      bg: 'bg-slate-500/15 border-slate-500/30 text-slate-400',
+      bg: 'bg-slate-800/80 border-slate-800 text-slate-400',
       icon: Archive,
     },
   };
@@ -48,7 +48,7 @@ export default function CaseStatusBadge({ status, size = 'sm' }: Props) {
 
   return (
     <span className={`inline-flex items-center gap-1.5 font-semibold rounded-full border ${current.bg} ${sizeClasses}`}>
-      <Icon className="w-3.5 h-3.5" />
+      <Icon className="w-3.5 h-3.5 shrink-0" />
       <span>{current.label}</span>
     </span>
   );

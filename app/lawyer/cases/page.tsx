@@ -7,16 +7,9 @@ import { CaseStatus } from '@/lib/types';
 import CaseStatusBadge from '@/components/lawyer/CaseStatusBadge';
 import { 
   FolderKanban, 
-  Sparkles, 
   Search, 
-  Filter, 
-  Calendar, 
-  Clock, 
-  User, 
   ChevronLeft, 
-  ShieldCheck, 
-  FileText,
-  AlertTriangle
+  FileText
 } from 'lucide-react';
 
 export default function LawyerCasesPage() {
@@ -39,36 +32,36 @@ export default function LawyerCasesPage() {
   const countByStatus = (status: CaseStatus) => cases.filter((c) => c.status === status).length;
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto animate-in fade-in duration-300">
+    <div className="space-y-8 max-w-6xl mx-auto animate-in fade-in duration-200">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] text-xs font-semibold">
             <FolderKanban className="w-3.5 h-3.5" />
-            <span>إدارة قضايا المكتب والطلبات المحولة</span>
+            <span>إدارة قضايا المكتب والدعاوى المحولة</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            ملفات القضايا والطلبات الواردة من الذكاء الاصطناعي
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+            سجل ملفات القضايا والطلبات الواردة
           </h1>
-          <p className="text-sm text-slate-400">
-            راجع الملخصات التنفيذية والأسانيد القانونية المستخلصة من استشارات الموكلين وقرر قبول الدعوى أو اتخاذ إجراءات التقاضي.
+          <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
+            مراجعة الوقائع القانونية والطلبات المقترحة وإدارة مراحل التقاضي والجلسات لكل دعوى.
           </p>
         </div>
       </div>
 
       {/* Filter Tabs & Search Bar */}
-      <div className="p-4 sm:p-6 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-4">
+      <div className="p-4 sm:p-6 rounded-3xl legal-card space-y-4 shadow-lg">
         
         {/* Search */}
         <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[var(--text-muted)] absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="ابحث برقم الملف، اسم الموكل، أو موضوع الدعوى..."
-            className="w-full pr-11 pl-4 py-3 rounded-2xl bg-slate-800/90 border border-slate-700 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500"
+            className="w-full pr-11 pl-4 py-3 rounded-xl bg-[var(--bg-input)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-gold)] transition-all"
           />
         </div>
 
@@ -76,44 +69,43 @@ export default function LawyerCasesPage() {
         <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-bold">
           <button
             onClick={() => setSelectedStatus('all')}
-            className={`px-4 py-2 rounded-xl transition-all whitespace-nowrap ${
+            className={`px-4 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
               selectedStatus === 'all'
-                ? 'bg-amber-500 text-slate-950 shadow-md'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? 'bg-[var(--bg-surface-elevated)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/40 shadow-sm'
+                : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
             }`}
           >
-            الكل ({cases.length})
+            جميع القضايا ({cases.length})
           </button>
           
           <button
             onClick={() => setSelectedStatus('new_intake')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all whitespace-nowrap ${
+            className={`px-4 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
               selectedStatus === 'new_intake'
-                ? 'bg-emerald-500 text-slate-950 shadow-md'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? 'bg-[var(--bg-surface-elevated)] text-amber-500 border border-amber-500/40 shadow-sm'
+                : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>طلبات AI جديدة ({countByStatus('new_intake')})</span>
+            <span>طلبات واردة جديدة ({countByStatus('new_intake')})</span>
           </button>
 
           <button
             onClick={() => setSelectedStatus('under_review')}
-            className={`px-4 py-2 rounded-xl transition-all whitespace-nowrap ${
+            className={`px-4 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
               selectedStatus === 'under_review'
-                ? 'bg-amber-500 text-slate-950 shadow-md'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? 'bg-[var(--bg-surface-elevated)] text-[var(--text-primary)] border border-[var(--border-subtle)] shadow-sm'
+                : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
             }`}
           >
-            قيد المراجعة ({countByStatus('under_review')})
+            قيد الدراسة ({countByStatus('under_review')})
           </button>
 
           <button
             onClick={() => setSelectedStatus('accepted')}
-            className={`px-4 py-2 rounded-xl transition-all whitespace-nowrap ${
+            className={`px-4 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
               selectedStatus === 'accepted'
-                ? 'bg-blue-500 text-slate-950 shadow-md'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? 'bg-[var(--bg-surface-elevated)] text-blue-400 border border-blue-500/40 shadow-sm'
+                : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
             }`}
           >
             مقبولة للتجهيز ({countByStatus('accepted')})
@@ -121,10 +113,10 @@ export default function LawyerCasesPage() {
 
           <button
             onClick={() => setSelectedStatus('in_court')}
-            className={`px-4 py-2 rounded-xl transition-all whitespace-nowrap ${
+            className={`px-4 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
               selectedStatus === 'in_court'
-                ? 'bg-purple-500 text-white shadow-md'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? 'bg-[var(--bg-surface-elevated)] text-purple-400 border border-purple-500/40 shadow-sm'
+                : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
             }`}
           >
             منظورة بالمحكمة ({countByStatus('in_court')})
@@ -135,65 +127,67 @@ export default function LawyerCasesPage() {
 
       {/* Cases List */}
       {filteredCases.length === 0 ? (
-        <div className="p-12 rounded-3xl bg-slate-900/50 border border-slate-800 text-center space-y-3">
-          <div className="w-14 h-14 rounded-full bg-slate-800 mx-auto flex items-center justify-center text-slate-400">
-            <FileText className="w-7 h-7" />
+        <div className="p-12 rounded-3xl legal-card text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] mx-auto flex items-center justify-center text-[var(--text-muted)]">
+            <FileText className="w-6 h-6" />
           </div>
-          <h3 className="text-sm font-bold text-white">لا توجد قضايا مطابقة لهذا التصنيف</h3>
+          <h3 className="text-sm font-bold text-[var(--text-primary)]">لا توجد ملفات قضايا مطابقة لهذا التصنيف</h3>
+          <p className="text-xs text-[var(--text-secondary)]">يمكنك مراجعة البحث أو اختيار تبويب تصنيف مختلف</p>
         </div>
       ) : (
         <div className="space-y-4">
           {filteredCases.map((c) => (
             <div
               key={c.id}
-              className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-slate-700 transition-all space-y-4 shadow-xl"
+              className="p-6 rounded-3xl legal-card space-y-4 shadow-lg hover:border-[var(--border-card-hover)] transition-all"
             >
               {/* Header Row */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="space-y-1 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <CaseStatusBadge status={c.status} />
-                    <span className="text-xs font-mono font-bold text-slate-400">{c.id}</span>
-                    <span className="text-xs text-slate-400">
-                      الموكل: <strong className="text-white">{c.clientName}</strong> ({c.clientLocation})
+                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-[var(--bg-input)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">
+                      {c.id}
+                    </span>
+                    <span className="text-xs text-[var(--text-secondary)]">
+                      الموكل: <strong className="text-[var(--text-primary)]">{c.clientName}</strong> ({c.clientLocation})
                     </span>
                   </div>
-                  <h3 className="text-base font-bold text-white">{c.title}</h3>
+                  <h3 className="text-base font-bold text-[var(--text-primary)]">{c.title}</h3>
                 </div>
 
-                <span className={`text-[11px] font-bold px-3 py-1 rounded-full shrink-0 ${
+                <span className={`text-[11px] font-semibold px-3 py-1 rounded-full shrink-0 ${
                   c.urgency === 'urgent'
-                    ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    ? 'bg-rose-500/15 text-rose-500 border border-rose-500/30'
                     : c.urgency === 'high'
-                    ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                    : 'bg-slate-800 text-slate-300'
+                    ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30'
+                    : 'bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)]'
                 }`}>
-                  {c.urgency === 'urgent' ? '🚨 أولوية قصوى' : c.urgency === 'high' ? '⚡ عاجل' : 'استشارة عادية'}
+                  {c.urgency === 'urgent' ? 'أولوية قصوى' : c.urgency === 'high' ? 'عاجل' : 'استشارة عادية'}
                 </span>
               </div>
 
-              {/* AI Brief Summary */}
-              <div className="p-4 rounded-2xl bg-slate-800/50 border border-slate-700/50 text-xs text-slate-200 leading-relaxed space-y-2">
-                <div className="flex items-center gap-1.5 font-bold text-emerald-400">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>الملخص التنفيذي المُعد عبر الذكاء الاصطناعي:</span>
-                </div>
-                <p>{c.executiveSummary}</p>
+              {/* Brief Summary */}
+              <div className="p-4 rounded-2xl bg-[var(--bg-input)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] leading-relaxed space-y-1">
+                <span className="font-bold text-[var(--accent-gold)] block mb-0.5">
+                  ملخص الواقعة:
+                </span>
+                <p className="text-[var(--text-primary)]">{c.executiveSummary}</p>
               </div>
 
               {/* Claims & Statutes Counts */}
-              <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400 pt-1">
+              <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-[var(--text-secondary)] pt-1 border-t border-[var(--border-subtle)]">
                 <div className="flex items-center gap-4 flex-wrap">
-                  <span>📜 المطالبات: <strong className="text-slate-200">{c.legalClaims.length} بنود</strong></span>
-                  <span>🏛️ السند التشريعي: <strong className="text-emerald-400">{c.relevantStatutes?.length || 1} مواد</strong></span>
-                  <span>📅 تاريخ الإرسال: <strong className="text-slate-200">{new Date(c.createdAt).toLocaleDateString('ar-EG')}</strong></span>
+                  <span>المطالبات: <strong className="text-[var(--text-primary)]">{c.legalClaims.length} بنود</strong></span>
+                  <span>السند التشريعي: <strong className="text-[var(--accent-gold)]">{c.relevantStatutes?.length || 1} مواد</strong></span>
+                  <span>تاريخ الإرسال: <strong className="text-[var(--text-primary)]">{new Date(c.createdAt).toLocaleDateString('ar-EG')}</strong></span>
                 </div>
 
                 <Link
                   href={`/lawyer/cases/${c.id}`}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold text-xs transition-colors"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--bg-surface-elevated)] hover:bg-[var(--bg-surface-hover)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/30 font-bold text-xs transition-colors"
                 >
-                  <span>عرض ملف القضية واتخاذ إجراء</span>
+                  <span>عرض ملف القضية والتحديث</span>
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </Link>
               </div>

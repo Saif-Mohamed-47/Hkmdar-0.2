@@ -5,17 +5,13 @@ import { useApp } from '@/lib/context/AppContext';
 import { CaseIntake, LegalCitation, LegalCategory } from '@/lib/types';
 import { 
   X, 
-  Sparkles, 
   Send, 
   Scale, 
   FileText, 
-  Clock, 
-  AlertTriangle, 
   CheckCircle2,
-  Calendar,
-  Building,
   User,
-  ShieldCheck
+  ShieldCheck,
+  Loader2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -32,7 +28,7 @@ export default function CaseSummaryModal({
   initialSummary,
   onSuccessRedirect,
 }: Props) {
-  const { lawyers, addCaseIntake, user } = useApp();
+  const { lawyers, addCaseIntake, user, addToast } = useApp();
 
   const [title, setTitle] = useState(
     initialSummary?.title || 'طلب دعوى عمالية وتعويض عن إنهاء الخدمة التعسفي'
@@ -103,7 +99,7 @@ export default function CaseSummaryModal({
       relevantStatutes,
       clientTimeline: initialSummary?.clientTimeline || [
         { date: 'منذ شهرين', event: 'بداية النزاع والإخلال بالحقوق' },
-        { date: 'اليوم', event: 'تحليل الواقعة عبر الذكاء الاصطناعي وإرسال ملف القضية' },
+        { date: 'اليوم', event: 'تحليل الواقعة قانونياً وإرسال ملف القضية' },
       ],
       aiStrategicRecommendation:
         initialSummary?.aiStrategicRecommendation ||
@@ -115,16 +111,21 @@ export default function CaseSummaryModal({
 
     try {
       confetti({
-        particleCount: 80,
-        spread: 70,
+        particleCount: 60,
+        spread: 60,
         origin: { y: 0.6 },
       });
     } catch (err) {
-      // safe fallback
+      // safe
     }
 
     setTimeout(() => {
       setIsSubmitting(false);
+      addToast({
+        type: 'success',
+        title: 'تم إرسال ملف القضية بنجاح',
+        message: `تم إحالة الملف إلى مكتب ${targetLawyer.name} لبدء دراسته وتجهيز صحيفة الدعوى`,
+      });
       onClose();
       if (onSuccessRedirect) {
         onSuccessRedirect();
@@ -134,29 +135,29 @@ export default function CaseSummaryModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-      <div className="relative w-full max-w-3xl max-h-[90vh] bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+      <div className="relative w-full max-w-3xl max-h-[90vh] bg-[#0b1224] border border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden">
         
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/40">
+        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-[#080f20]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-emerald-400" />
+            <div className="w-9 h-9 rounded-xl bg-[#111c38] border border-[#c5a059]/30 flex items-center justify-center text-[#dfba73]">
+              <FileText className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                ملف القضية الذكي المُعد للمحامي
-                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                  AI Case Brief
+                ملف القضية المُعد للمحامي
+                <span className="text-[10px] bg-[#111c38] text-[#dfba73] px-2 py-0.5 rounded-full border border-[#c5a059]/20">
+                  Case Brief
                 </span>
               </h3>
               <p className="text-xs text-slate-400">
-                راجع البيانات المستخلصة آلياً من محادثتك قبل إرسالها لمكتب المحامي
+                مراجعة البيانات المستخلصة من استشارتك قبل إرسالها لمكتب الدفاع
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors"
+            className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -166,8 +167,8 @@ export default function CaseSummaryModal({
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
           
           {/* Target Lawyer Selection */}
-          <div className="p-4 rounded-2xl bg-slate-800/60 border border-slate-700/60">
-            <label className="block text-xs font-semibold text-slate-300 mb-2">
+          <div className="p-4 rounded-2xl bg-[#080e1c] border border-slate-800 space-y-2">
+            <label className="block text-xs font-semibold text-slate-300">
               اختر المحامي المستلم لملف القضية:
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -179,25 +180,25 @@ export default function CaseSummaryModal({
                     onClick={() => setSelectedLawyerId(lawyer.id)}
                     className={`cursor-pointer flex items-center gap-3 p-3 rounded-xl border transition-all ${
                       isSelected
-                        ? 'bg-emerald-950/40 border-emerald-500 shadow-md shadow-emerald-950/50'
-                        : 'bg-slate-800/40 border-slate-700 hover:border-slate-600'
+                        ? 'bg-[#111c38] border-[#c5a059]/60 shadow-md'
+                        : 'bg-[#0b1224] border-slate-800 hover:border-slate-700'
                     }`}
                   >
                     <img
                       src={lawyer.avatar}
                       alt={lawyer.name}
-                      className="w-10 h-10 rounded-full object-cover ring-1 ring-slate-600"
+                      className="w-10 h-10 rounded-full object-cover ring-1 ring-slate-700"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-white truncate">{lawyer.name}</p>
                       <p className="text-[10px] text-slate-400 truncate">{lawyer.location}</p>
-                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-emerald-400">
+                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[#dfba73]">
                         <span>⭐ {lawyer.rating}</span>
-                        <span>• نجاح {lawyer.winRate}%</span>
+                        <span>• نسبة نجاح {lawyer.winRate}%</span>
                       </div>
                     </div>
                     {isSelected && (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-[#dfba73] shrink-0" />
                     )}
                   </div>
                 );
@@ -205,18 +206,18 @@ export default function CaseSummaryModal({
             </div>
           </div>
 
-          {/* Case Title & Category */}
+          {/* Case Title & Urgency */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2">
               <label className="block text-xs font-medium text-slate-300 mb-1">
-                عنوان القضية / الطلب:
+                عنوان القضية / موضوع الدعوى:
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#080e1c] border border-slate-800 text-sm text-white focus:outline-none focus:border-[#c5a059]"
               />
             </div>
             <div>
@@ -226,12 +227,12 @@ export default function CaseSummaryModal({
               <select
                 value={urgency}
                 onChange={(e) => setUrgency(e.target.value as CaseIntake['urgency'])}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#080e1c] border border-slate-800 text-sm text-white focus:outline-none focus:border-[#c5a059]"
               >
-                <option value="urgent">🚨 عاجل جداً (خلال 24 ساعة)</option>
-                <option value="high">⚡ مرتفع (خلال يومين)</option>
-                <option value="medium">⚖️ عادي / استشارة قياسية</option>
-                <option value="low">📋 منخفض</option>
+                <option value="urgent">أولوية قصوى (خلال 24 ساعة)</option>
+                <option value="high">عاجل (خلال يومين)</option>
+                <option value="medium">عادي / استشارة قياسية</option>
+                <option value="low">منخفض</option>
               </select>
             </div>
           </div>
@@ -239,15 +240,15 @@ export default function CaseSummaryModal({
           {/* Executive Summary */}
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1 flex items-center justify-between">
-              <span>الملخص التنفيذي لوقائع القضية (مُستخلص بالذكاء الاصطناعي):</span>
-              <span className="text-[11px] text-emerald-400 font-normal">قابل للتعديل</span>
+              <span>الملخص التنفيذي لوقائع الدعوى:</span>
+              <span className="text-[11px] text-[#dfba73]">قابل للتعديل</span>
             </label>
             <textarea
               rows={3}
               value={executiveSummary}
               onChange={(e) => setExecutiveSummary(e.target.value)}
               required
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500 leading-relaxed"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#080e1c] border border-slate-800 text-sm text-white focus:outline-none focus:border-[#c5a059] leading-relaxed"
             />
           </div>
 
@@ -260,22 +261,22 @@ export default function CaseSummaryModal({
               rows={3}
               value={legalClaimsText}
               onChange={(e) => setLegalClaimsText(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono text-xs leading-relaxed"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#080e1c] border border-slate-800 text-sm text-white focus:outline-none focus:border-[#c5a059] font-mono text-xs leading-relaxed"
             />
           </div>
 
           {/* Client Info Banner */}
-          <div className="p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/50 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300">
+          <div className="p-3.5 rounded-xl bg-[#080e1c] border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300">
             <div className="flex items-center gap-2">
-              <User className="w-4 h-4 text-emerald-400" />
+              <User className="w-4 h-4 text-[#dfba73]" />
               <span>مقدم الطلب: <strong>{user.name}</strong></span>
             </div>
             <div className="flex items-center gap-2">
               <span>الهاتف: <strong>{user.phone || '+20 102 334 9988'}</strong></span>
             </div>
-            <div className="flex items-center gap-1.5 text-emerald-400">
+            <div className="flex items-center gap-1.5 text-[#dfba73]">
               <ShieldCheck className="w-4 h-4" />
-              <span>بيانات مشفرة ومحمية بسرية المحاماة</span>
+              <span>بيانات مشفرة وسرية تامة</span>
             </div>
           </div>
 
@@ -284,21 +285,24 @@ export default function CaseSummaryModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium transition-colors"
+              className="px-5 py-2.5 rounded-xl bg-[#080e1c] hover:bg-slate-800 text-slate-300 text-sm font-medium transition-colors cursor-pointer border border-slate-800"
             >
               إلغاء
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-900/40 transition-all hover:scale-[1.02] disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl btn-legal-gold text-sm font-bold disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? (
-                <span>جاري إرسال الملف...</span>
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>جاري إرسال الملف...</span>
+                </>
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  <span>إرسال ملف القضية للمحامي الآن</span>
+                  <span>إرسال ملف القضية للمحامي</span>
                 </>
               )}
             </button>

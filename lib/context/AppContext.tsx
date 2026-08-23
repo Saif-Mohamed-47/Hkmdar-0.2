@@ -5,6 +5,8 @@ import { User, UserRole, CaseIntake, LawyerProfile, CaseStatus, LegalCategory, C
 import { MOCK_LAWYERS } from '../data/lawyersData';
 import { supabase } from '../supabaseClient';
 
+export type AppTheme = 'dark' | 'light';
+
 interface ToastNotification {
   id: string;
   type: 'success' | 'info' | 'warning' | 'error';
@@ -33,6 +35,9 @@ interface AppContextType {
   lang: 'ar' | 'en';
   setLang: (lang: 'ar' | 'en') => void;
   isRTL: boolean;
+  theme: AppTheme;
+  setTheme: (theme: AppTheme) => void;
+  toggleTheme: () => void;
 }
 
 const DEFAULT_CLIENT_USER: User = {
@@ -60,6 +65,7 @@ const DEFAULT_LAWYER_USER: User = {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_LANG_KEY = 'hakmdar_lang_v1';
+const LOCAL_STORAGE_THEME_KEY = 'hakmdar_theme_v1';
 
 let toastIdCounter = 0;
 function createToastNotification(toast: Omit<ToastNotification, 'id' | 'timestamp'>): ToastNotification {
@@ -120,11 +126,57 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     return 'ar';
   });
+
+  const [theme, setThemeState] = useState<AppTheme>('dark');
   const [cases, setCases] = useState<CaseIntake[]>([]);
   const [lawyers] = useState<LawyerProfile[]>(MOCK_LAWYERS);
   const [selectedLawyerId, setSelectedLawyerId] = useState<string>('lawyer-1');
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [user, setUser] = useState<User>(DEFAULT_CLIENT_USER);
+
+  // Initialize theme from localStorage on client
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY) as AppTheme | null;
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        setThemeState(savedTheme);
+        applyThemeClass(savedTheme);
+      } else {
+        // default is dark
+        applyThemeClass('dark');
+      }
+    } catch {}
+  }, []);
+
+  const applyThemeClass = (t: AppTheme) => {
+    if (typeof document !== 'undefined') {
+      const root = document.documentElement;
+      if (t === 'dark') {
+        root.classList.add('dark');
+        root.classList.remove('light');
+        root.setAttribute('data-theme', 'dark');
+      } else {
+        root.classList.remove('dark');
+        root.classList.add('light');
+        root.setAttribute('data-theme', 'light');
+      }
+    }
+  };
+
+  const setTheme = (newTheme: AppTheme) => {
+    setThemeState(newTheme);
+    applyThemeClass(newTheme);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(LOCAL_STORAGE_THEME_KEY, newTheme);
+      } catch {}
+    }
+  };
+
+  const toggleTheme = () => {
+    const nextTheme: AppTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+  };
 
   // Fetch cases belonging to the authenticated lawyer from backend
   const fetchUserCases = async (accessToken?: string) => {
@@ -420,6 +472,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         lang,
         setLang,
         isRTL,
+        theme,
+        setTheme,
+        toggleTheme,
       }}
     >
       {children}
