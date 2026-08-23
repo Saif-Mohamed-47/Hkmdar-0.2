@@ -77,12 +77,12 @@ export default function Navbar() {
         {/* Brand & Logo */}
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-[var(--bg-input)] border border-[var(--accent-gold)]/40 p-1 flex items-center justify-center shadow-md group-hover:border-[var(--accent-gold)] transition-colors">
-              <img src="/hakmdar-logo.png" alt="حكمدار" className="w-full h-full object-contain" />
+            <div className="w-10 h-10 rounded-xl bg-[var(--bg-input)] border border-[var(--accent-gold)]/40 p-1 flex items-center justify-center shadow-md group-hover:border-[var(--accent-gold)] transition-colors overflow-hidden">
+              <img src="/hakmdar-icon.png" alt="حِكِمْدار" className="w-full h-full object-contain" />
             </div>
             <div>
               <span className="font-extrabold text-lg tracking-tight text-[var(--text-primary)] block leading-none">
-                حُكْمَدَار
+                حِكِمْدار
               </span>
               <span className="text-[10px] text-[var(--accent-gold)] font-medium">
                 {isLawyer ? 'بوابة المحامي' : 'بوابة الموكل'}

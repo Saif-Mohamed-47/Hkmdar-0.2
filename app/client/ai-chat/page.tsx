@@ -187,8 +187,8 @@ export default function LegalAIChatPage() {
       {/* Chat Header */}
       <div className="px-6 py-4 border-b border-slate-800 bg-[#080f20] flex items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#060a14] border border-[#c5a059]/40 p-1 flex items-center justify-center shadow-md">
-            <img src="/hakmdar-logo.png" alt="حكمدار" className="w-full h-full object-contain" />
+          <div className="w-10 h-10 rounded-xl bg-[#060a14] border border-[#c5a059]/40 p-1 flex items-center justify-center shadow-md overflow-hidden">
+            <img src="/hakmdar-icon.png" alt="حِكِمْدار" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="flex items-center gap-2">

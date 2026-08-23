@@ -29,12 +29,12 @@ export default function LandingPage() {
       <header className="border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/90 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3.5 group">
-            <div className="w-12 h-12 rounded-xl bg-[var(--bg-input)] border border-[var(--accent-gold)]/40 p-1 flex items-center justify-center shadow-lg group-hover:border-[var(--accent-gold)] transition-colors">
-              <img src="/hakmdar-logo.png" alt="حكمدار" className="w-full h-full object-contain" />
+            <div className="w-12 h-12 rounded-xl bg-[var(--bg-input)] border border-[var(--accent-gold)]/40 p-1.5 flex items-center justify-center shadow-lg group-hover:border-[var(--accent-gold)] transition-colors overflow-hidden">
+              <img src="/hakmdar-icon.png" alt="حِكِمْدار" className="w-full h-full object-contain" />
             </div>
             <div>
               <span className="font-black text-2xl tracking-tight text-[var(--text-primary)] block leading-none">
-                حُكْمَدَار
+                حِكِمْدار
               </span>
               <span className="text-[11px] font-semibold text-[var(--accent-gold)] tracking-normal">
                 للمحاماة والاستشارات القانونية وإدارة القضايا
@@ -317,10 +317,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/40 p-0.5 flex items-center justify-center">
-                <img src="/hakmdar-logo.png" alt="حكمدار" className="w-full h-full object-contain" />
+              <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/40 p-1 flex items-center justify-center overflow-hidden">
+                <img src="/hakmdar-icon.png" alt="حِكِمْدار" className="w-full h-full object-contain" />
               </div>
-              <span className="font-extrabold text-[var(--text-primary)] text-sm">حكمدار للمحاماة والاستشارات القانونية</span>
+              <span className="font-extrabold text-[var(--text-primary)] text-sm">حِكِمْدار للمحاماة والاستشارات القانونية</span>
             </div>
             <p className="text-[var(--text-muted)] text-center sm:text-left">
               جميع الحقوق محفوظة © {new Date().getFullYear()} حكمدار. منصة التقاضي الرقمية المعتمدة.

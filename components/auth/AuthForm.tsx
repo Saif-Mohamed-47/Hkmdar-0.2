@@ -280,17 +280,17 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
 
           {/* Brand content */}
           <div className="relative z-10 my-auto flex flex-col items-center text-center py-6">
-            <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl p-3 bg-black/50 border border-[#c5a059]/25 shadow-lg flex items-center justify-center">
+            <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-3xl p-3 bg-black/60 border border-[#c5a059]/30 shadow-2xl flex items-center justify-center overflow-hidden">
               <img
                 src="/hakmdar-logo.png"
-                alt="حكمدار للمحاماة والاستشارات القانونية"
+                alt="حِكِمْدار للمحاماة والاستشارات القانونية"
                 className="w-full h-full object-contain"
               />
             </div>
 
-            <div className="mt-5 space-y-1.5">
+            <div className="mt-6 space-y-1.5">
               <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                حُكْمَدَار
+                حِكِمْدار
               </h2>
               <p className="text-xs sm:text-sm font-semibold text-[#dfba73]">
                 للمحاماة والاستشارات القانونية وإدارة القضايا
