@@ -65,39 +65,50 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-16 pb-20 md:py-24 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+      {/* Cinematic Full-Screen Brand Cover (First Impression) */}
+      <section className="relative min-h-[calc(100vh-5rem)] flex flex-col items-center justify-center text-center px-4 py-12 bg-gradient-to-b from-[var(--bg-primary)] via-[#080f22] to-[var(--bg-surface)] border-b border-[var(--border-subtle)] overflow-hidden">
         
-        {/* Subtle geometric line accents */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-8">
+        {/* Ambient Gold Glow & Effects */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] sm:w-[650px] h-[500px] sm:h-[650px] rounded-full bg-[radial-gradient(circle,rgba(197,160,89,0.16)_0%,transparent_70%)] pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col items-center max-w-4xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-700">
+          
+          {/* Majestic Sword Emblem Frame */}
+          <div className="relative group mb-2">
+            <div className="absolute -inset-3 rounded-3xl bg-gradient-to-r from-[#c5a059]/40 via-[#dfba73]/50 to-[#c5a059]/40 blur-2xl opacity-80 group-hover:opacity-100 transition-opacity" />
+            <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-3xl bg-[#080e1c] border-2 border-[#c5a059]/60 p-3 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(197,160,89,0.25)] flex items-center justify-center overflow-hidden">
+              <img
+                src="/hakmdar-icon.png"
+                alt={t.brand.name}
+                className="w-full h-full object-contain drop-shadow-[0_4px_16px_rgba(197,160,89,0.4)]"
+              />
+            </div>
+          </div>
+
+          {/* Grand Brand Name with Accurate Diacritics */}
+          <div className="space-y-3">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-[var(--text-primary)] tracking-tight">
+              {t.brand.name}
+            </h1>
+            <p className="text-base sm:text-xl font-bold text-[var(--accent-gold)] tracking-wide max-w-2xl mx-auto leading-relaxed">
+              {t.brand.tagline}
+            </p>
+          </div>
 
           {/* Institutional Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] text-xs font-semibold shadow-sm">
+          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] text-xs sm:text-sm font-semibold shadow-md">
             <Scale className="w-4 h-4 text-[var(--accent-gold)]" />
             <span>{t.hero.badge}</span>
           </div>
 
-          {/* Main Headline */}
-          <div className="max-w-4xl mx-auto space-y-4">
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-[var(--text-primary)] tracking-tight leading-[1.25]">
-              {t.hero.title1}{' '}
-              <span className="text-[var(--accent-gold)]">
-                {t.hero.title2}
-              </span>
-            </h1>
-            <p className="text-sm sm:text-lg text-[var(--text-secondary)] max-w-3xl mx-auto leading-relaxed">
-              {t.hero.description}
-            </p>
-          </div>
-
           {/* Dual Entrance Portals */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 max-w-xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full max-w-xl mx-auto">
             
             {/* Client Portal Button */}
             <Link
               href="/register?role=client"
               onClick={() => setRole('client')}
-              className="w-full sm:w-1/2 flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl btn-legal-gold text-xs font-bold"
+              className="w-full sm:w-1/2 flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl btn-legal-gold text-xs font-bold shadow-lg"
             >
               <Users className="w-4 h-4" />
               <span>{t.hero.clientCta}</span>
@@ -108,7 +119,7 @@ export default function LandingPage() {
             <Link
               href="/register?role=lawyer"
               onClick={() => setRole('lawyer')}
-              className="w-full sm:w-1/2 flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl btn-legal-navy text-xs font-bold"
+              className="w-full sm:w-1/2 flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl btn-legal-navy text-xs font-bold shadow-lg border border-[var(--accent-gold)]/40"
             >
               <Briefcase className="w-4 h-4 text-[var(--accent-gold)]" />
               <span>{t.hero.lawyerCta}</span>
@@ -117,8 +128,36 @@ export default function LandingPage() {
 
           </div>
 
+          {/* Scroll Down Indicator */}
+          <div className="pt-8 flex flex-col items-center gap-2 text-xs text-[var(--text-secondary)]">
+            <span>{lang === 'en' ? 'Scroll down to explore features' : 'مرر لأسفل لاستكشاف خدمات المنصة'}</span>
+            <div className="w-5 h-8 rounded-full border-2 border-[var(--accent-gold)]/40 flex items-start justify-center p-1">
+              <div className="w-1.5 h-2 bg-[var(--accent-gold)] rounded-full animate-bounce" />
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* Hero Details Section */}
+      <section className="relative overflow-hidden py-20 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-8">
+
+          {/* Main Headline */}
+          <div className="max-w-4xl mx-auto space-y-4">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[var(--text-primary)] tracking-tight leading-[1.25]">
+              {t.hero.title1}{' '}
+              <span className="text-[var(--accent-gold)]">
+                {t.hero.title2}
+              </span>
+            </h2>
+            <p className="text-sm sm:text-base text-[var(--text-secondary)] max-w-3xl mx-auto leading-relaxed">
+              {t.hero.description}
+            </p>
+          </div>
+
           {/* Institutional Trust Highlights */}
-          <div className="pt-10 flex flex-wrap items-center justify-center gap-6 sm:gap-12 text-xs font-medium text-[var(--text-secondary)]">
+          <div className="pt-6 flex flex-wrap items-center justify-center gap-6 sm:gap-12 text-xs font-medium text-[var(--text-secondary)]">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-[var(--accent-gold)]" />
               <span>{t.hero.trust1}</span>
