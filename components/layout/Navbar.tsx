@@ -55,7 +55,7 @@ export default function Navbar() {
     { href: '/client/ai-chat', label: t.nav.legalAdvisor },
     { href: '/client/legal-research', label: t.nav.legalResearch },
     { href: '/client/lawyers', label: t.nav.lawyersDirectory },
-    { href: '/client/cases', label: t.nav.myCases },
+    { href: '/client/my-cases', label: t.nav.myCases },
   ];
 
   const lawyerNavLinks: NavLinkItem[] = [

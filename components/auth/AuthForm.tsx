@@ -72,7 +72,13 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
   const { setRole: setAppRole, addToast, setUser: setAppUser } = useApp();
 
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
-  const [role, setSelectedRole] = useState<UserRole>(defaultRole);
+  const roleFromUrl = searchParams.get('role');
+  const [role, setSelectedRole] = useState<UserRole>(() => {
+    if (roleFromUrl === 'lawyer' || roleFromUrl === 'client') {
+      return roleFromUrl;
+    }
+    return defaultRole || 'client';
+  });
   
   // Form fields
   const [fullName, setFullName] = useState('');
@@ -90,13 +96,7 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
   const [serverError, setServerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sync role from query params if available
-  useEffect(() => {
-    const roleParam = searchParams.get('role');
-    if (roleParam === 'lawyer' || roleParam === 'client') {
-      setSelectedRole(roleParam);
-    }
-  }, [searchParams]);
+  // Role is initialized from searchParams or defaultRole above
 
   const clearErr = (field: string) => setErrors((prev) => ({ ...prev, [field]: '' }));
 

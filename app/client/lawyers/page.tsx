@@ -103,7 +103,7 @@ export default function LawyersDirectoryPage() {
           <div>
             <select
               value={selectedSpecialty}
-              onChange={(e) => setSelectedSpecialty(e.target.value as any)}
+              onChange={(e) => setSelectedSpecialty(e.target.value as LegalCategory | 'all')}
               className="w-full px-3 py-2.5 rounded-xl bg-[#080e1c] border border-slate-800 text-xs text-white focus:outline-none focus:border-[#c5a059]"
             >
               <option value="all">جميع التخصصات القانونية</option>

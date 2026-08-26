@@ -43,6 +43,8 @@ export type LegalCategory =
   | 'commercial' 
   | 'administrative' 
   | 'intellectual_property' 
+  | 'constitutional'
+  | 'military'
   | 'tax';
 
 export interface ChatMessage {

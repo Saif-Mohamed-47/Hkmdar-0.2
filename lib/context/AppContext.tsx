@@ -127,27 +127,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return 'ar';
   });
 
-  const [theme, setThemeState] = useState<AppTheme>('dark');
-  const [cases, setCases] = useState<CaseIntake[]>([]);
-  const [lawyers] = useState<LawyerProfile[]>(MOCK_LAWYERS);
-  const [selectedLawyerId, setSelectedLawyerId] = useState<string>('lawyer-1');
-  const [toasts, setToasts] = useState<ToastNotification[]>([]);
-  const [user, setUser] = useState<User>(DEFAULT_CLIENT_USER);
-
-  // Initialize theme from localStorage on client
-  useEffect(() => {
-    try {
-      const savedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY) as AppTheme | null;
-      if (savedTheme === 'light' || savedTheme === 'dark') {
-        setThemeState(savedTheme);
-        applyThemeClass(savedTheme);
-      } else {
-        // default is dark
-        applyThemeClass('dark');
-      }
-    } catch {}
-  }, []);
-
   const applyThemeClass = (t: AppTheme) => {
     if (typeof document !== 'undefined') {
       const root = document.documentElement;
@@ -162,6 +141,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
   };
+
+  const [theme, setThemeState] = useState<AppTheme>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY) as AppTheme | null;
+        if (savedTheme === 'light' || savedTheme === 'dark') {
+          return savedTheme;
+        }
+      } catch {}
+    }
+    return 'dark';
+  });
+
+  const [cases, setCases] = useState<CaseIntake[]>([]);
+  const [lawyers] = useState<LawyerProfile[]>(MOCK_LAWYERS);
+  const [selectedLawyerId, setSelectedLawyerId] = useState<string>('lawyer-1');
+  const [toasts, setToasts] = useState<ToastNotification[]>([]);
+  const [user, setUser] = useState<User>(DEFAULT_CLIENT_USER);
+
+  // Sync DOM with current theme
+  useEffect(() => {
+    applyThemeClass(theme);
+  }, [theme]);
 
   const setTheme = (newTheme: AppTheme) => {
     setThemeState(newTheme);

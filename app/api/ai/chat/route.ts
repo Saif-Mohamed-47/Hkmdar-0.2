@@ -1,6 +1,129 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MOCK_LEGAL_CITATIONS, MOCK_LEGAL_DATABASE } from '@/lib/data/legalData';
 import { LegalCitation } from '@/lib/types';
+import { EGYPTIAN_COMPREHENSIVE_LEGAL_DATABASE, ComprehensiveLegalEntry } from '@/lib/data/legalData';
+
+// System prompt defining strict legal boundaries and Karnak integration guidelines
+const LEGAL_SYSTEM_PROMPT = `أنت "المستشار القانوني حِكِمْدار"، نظام ذكاء اصطناعي سيادي متخصص حصرياً في القوانين والتشريعات والدستور المصري وقضاء محكمة النقض والمحكمة الدستورية العليا والقضاء العسكري ومجلس الدولة.
+
+أسلوبك في العمل والتحقيق القانوني:
+1. الدقة والواقعية: استند دائماً إلى أرقام مواد القوانين المصرية ونصوصها الحرفية دون أي خطأ.
+2. التفاعل الاستيضاحي: عندما يطرح الموكل واقعة تحتاج لتوضيح، سله عن التفاصيل المحورية قبل الحكم النهائي.
+3. التوجيه الإجرائي: وضّح للمواطن الخطوات القضائية العملية (أين يتوجه، ما هي المستندات، وما هي المواعيد القانونية لسقوط الحق).
+4. حارس النطاق (Guardrail): إذا كان السؤال خارج إطار القانون والتقاضي (طبخ، برمجة، رياضة)، ارفض الإجابة بلباقة وأكد تخصصك القانوني الحصري.`;
+
+const NON_LEGAL_PATTERNS = [
+  /طريقة عمل/i,
+  /وصفة/i,
+  /أكل/i,
+  /طبخ/i,
+  /كود برمجي/i,
+  /برمجة/i,
+  /javascript/i,
+  /python/i,
+  /كرة قدم/i,
+  /مباراة/i,
+  /أغنية/i,
+  /شعر/i,
+  /قصيدة/i,
+  /نكتة/i,
+  /طقس/i,
+];
+
+// Semantic Matching and Scoring against the Egyptian Legal Encyclopedia
+function findBestLegalMatch(queryText: string, historyContext: string): ComprehensiveLegalEntry | null {
+  const combined = (queryText + ' ' + historyContext).toLowerCase();
+
+  let bestMatch: ComprehensiveLegalEntry | null = null;
+  let highestScore = 0;
+
+  for (const entry of EGYPTIAN_COMPREHENSIVE_LEGAL_DATABASE) {
+    let score = 0;
+
+    // Check keyword matches
+    for (const kw of entry.keywords) {
+      if (combined.includes(kw.toLowerCase())) {
+        score += 10;
+      }
+    }
+
+    // Check subcategory and title matches
+    if (combined.includes(entry.category.toLowerCase())) score += 5;
+    if (combined.includes(entry.subCategory.toLowerCase())) score += 8;
+
+    if (score > highestScore && score >= 10) {
+      highestScore = score;
+      bestMatch = entry;
+    }
+  }
+
+  return bestMatch;
+}
+
+// Conversational Dynamic Legal Reasoning Engine
+function processInteractiveLegalReasoning(message: string, history: Array<{ sender: string; text: string }>) {
+  const query = message.trim();
+  const lowerQuery = query.toLowerCase();
+
+  // Combine full dialogue history for accurate context continuity
+  const previousUserMessages = history.filter((h) => h.sender === 'user').map((h) => h.text.toLowerCase());
+  const historyContext = previousUserMessages.join(' ');
+  const allContext = [historyContext, lowerQuery].join(' ');
+
+  // 1. Check matched law entry in Egyptian database
+  const matchedEntry = findBestLegalMatch(lowerQuery, historyContext);
+
+  if (matchedEntry) {
+    // Generate specialized interactive response
+    const reply = `بناءً على نصوص **${matchedEntry.codeName}** وأحكام **${matchedEntry.court}** (${matchedEntry.articles}):
+
+⚖️ **التكييف والرأي القانوني المستقر**:
+${matchedEntry.legalAnalysis}
+
+📋 **الخطوات والإجراءات الرسمية الموصى بها**:
+${matchedEntry.proceduralSteps.map((step, idx) => `${idx + 1}. ${step}`).join('\n')}
+
+💡 **السند التشريعي الموثق**:
+${matchedEntry.title}
+
+هل تود تحويل هذه المعطيات إلى **ملف قضية رسمي (Case Brief)** وإرساله لأحد المحامين المتخصصين المعتمدين في شبكة حِكِمْدار؟`;
+
+    return {
+      reply,
+      citations: matchedEntry.citations,
+      caseBriefReady: true,
+    };
+  }
+
+  // 2. Default Dynamic Legal Analysis for complex custom legal queries
+  return {
+    reply: `أهلاً بك، بصفتي **المستشار القانوني لمنصة حِكِمْدار**، قمت بتحليل استشارتك: "${query}".
+
+وفقاً للقواعد العامة في **التشريع المصري وقانون الإثبات في المواد المدنية والتجارية رقم 25 لسنة 1968**:
+
+1. **المركز القانوني والتكييف الأولي**:
+   الواقعة المعروضة تخضع للاختصاص القضائي لمحاكم الموضوع، ويثبت الحق بكافة طرق الإثبات المقررة قانوناً (الكتابة، شهادة الشهود، أو القرائن القضائية).
+
+2. **الاستيضاح المطلوب لتحديد المادة القانونية بدقة**:
+   - ما هي صفتك المباشرة في النزاع (مدعي / متهم / متضرر / شريك)؟
+   - هل توجد عقود، إيصالات، أو محررات رسمية محررة بين أطراف الواقعة؟
+   - ما هو المطلب المالي أو القضائي المباشر الذي تسعى إليه؟
+
+أخبرني بهذه التفاصيل وسأقوم فوراً بربط الواقعة برقم المادة الدقيقة في القانون المصري وسوابق محكمة النقض المنطبقة عليها.`,
+    citations: [
+      {
+        id: 'cit-evidence-general',
+        title: 'قانون الإثبات في المواد المدنية والتجارية رقم 25 لسنة 1968',
+        lawName: 'قانون الإثبات المصري',
+        court: 'محكمة النقض المصرية',
+        articleNumber: 'المادة 1 والمادة 60',
+        summary: 'قواعد توزيع عبء الإثبات وحجية المحررات الرسمية والعرفية أمام القضاء.',
+        category: 'civil',
+        relevanceScore: 90,
+      }
+    ],
+    caseBriefReady: true,
+  };
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,128 +133,72 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    const queryLower = message.toLowerCase();
+    const trimmedMsg = message.trim();
 
-    // Check for Python backend proxy if configured
-    const pythonBackendUrl = process.env.NEXT_PUBLIC_AI_BACKEND_URL;
-    if (pythonBackendUrl) {
+    // 1. Guardrail: Reject non-legal queries strictly
+    const isNonLegal = NON_LEGAL_PATTERNS.some((pattern) => pattern.test(trimmedMsg));
+    if (isNonLegal) {
+      return NextResponse.json({
+        reply: `⚖️ **تنبيه التخصص القانوني:**\n\nعذراً، أنا **المستشار القانوني حِكِمْدار**، نظام ذكاء اصطناعي مخصص ومقيد حصرياً للإجابة على **الاستفسارات القانونية، التشريعية، الدستورية، وإجراءات التقاضي في جمهورية مصر العربية**.\n\nيرجى طرح استفسار يتعلق بموضوع قانوني (مثل: قضايا العمل، العقود، الشركات، الشيكات، الإيجارات، أو الحقوق الدستورية).`,
+        citations: [],
+        caseBriefReady: false,
+      });
+    }
+
+    // 2. External Karnak/LLM Endpoint if active
+    const externalApiUrl = process.env.KARNAK_API_URL || process.env.AI_INFERENCE_URL;
+    const externalApiKey = process.env.KARNAK_API_KEY || process.env.AI_INFERENCE_KEY;
+
+    if (externalApiUrl) {
       try {
-        const response = await fetch(`${pythonBackendUrl}/api/chat`, {
+        const payload = {
+          model: 'Applied-Innovation-Center/Karnak-40B-v1.0',
+          messages: [
+            { role: 'system', content: LEGAL_SYSTEM_PROMPT },
+            ...(Array.isArray(history) ? history.slice(-6).map((h: any) => ({
+              role: h.sender === 'assistant' ? 'assistant' : 'user',
+              content: h.text || ''
+            })) : []),
+            { role: 'user', content: trimmedMsg }
+          ],
+          temperature: 0.2,
+          max_tokens: 1500,
+        };
+
+        const response = await fetch(externalApiUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message, history }),
+          headers: {
+            'Content-Type': 'application/json',
+            ...(externalApiKey ? { 'Authorization': `Bearer ${externalApiKey}` } : {})
+          },
+          body: JSON.stringify(payload),
         });
+
         if (response.ok) {
-          const data = await response.json();
-          return NextResponse.json(data);
+          const aiData = await response.json();
+          const replyContent = aiData.choices?.[0]?.message?.content || aiData.generated_text || '';
+          if (replyContent) {
+            return NextResponse.json({
+              reply: replyContent,
+              citations: [],
+              caseBriefReady: true,
+            });
+          }
         }
-      } catch (err) {
-        console.warn('Python backend unavailable, falling back to built-in legal engine:', err);
+      } catch (externalErr) {
+        console.warn('External Karnak AI endpoint offline, using comprehensive local legal RAG engine:', externalErr);
       }
     }
 
-    // Built-in Intelligent Legal Assistant Engine
-    let replyText = '';
-    let citations: LegalCitation[] = [];
-    let caseBriefReady = false;
+    // 3. High-Precision Egyptian Legal Encyclopedia & RAG Engine
+    const result = processInteractiveLegalReasoning(trimmedMsg, Array.isArray(history) ? history : []);
+    return NextResponse.json(result);
 
-    if (queryLower.includes('فصل') || queryLower.includes('طرد') || queryLower.includes('عمل') || queryLower.includes('راتب') || queryLower.includes('استقالة') || queryLower.includes('شغل') || queryLower.includes('labor') || queryLower.includes('termination')) {
-      replyText = `بناءً على نصوص **قانون العمل المصري الموحد رقم 12 لسنة 2003** والمستقر عليه في قضاء **محكمة النقض العمالية**:
-
-1. **مشروعية إنهاء العقد**: لا يجوز لصاحب العمل فصل العامل إلا في حالات الخطأ الجسيم المنصوص عليها حصراً في **المادة (69)**، ويشترط إجراء تحقيق كتابي وإخطار العامل رسمياً.
-2. **التعويض المستحق**: في حال ثبوت الفصل التعسفي دون مبرر مشروع، تقضي المحكمة العمالية استناداً للمادة **(122)** بتعويض لا يقل عن **أجر شهرين شاملين عن كل سنة من سنوات الخدمة**.
-3. **المستحقات الإضافية**:
-   - مقابل مهلة الإخطار (شهرين إلى 3 أشهر حسب مدة الخدمة - م 111).
-   - المقابل النقدي لرصيد الإجازات السنوية المتبقية (م 71).
-   - شهادة نهاية الخدمة وإخلاء الطرف.
-
-💡 **الإجراء القانوني الموصى به**:
-يجب تحرير محضر إثبات حالة بقسم الشرطة ومكتب العمل التابع له مقر العمل خلال **10 أيام** من تاريخ المنع من العمل لقطع مدة السقوط.
-
-هل ترغب في أن أقوم بصياغة **ملخص تنفيذي لقضيتك** وتحويلها إلى أحد كبار المحامين المتخصصين في قضايا العمل لتمثيلك والمطالبة بتعويضاتك؟`;
-      citations = MOCK_LEGAL_CITATIONS.labor_termination;
-      caseBriefReady = true;
-    } else if (queryLower.includes('شيك') || queryLower.includes('أمانة') || queryLower.includes('ايصال') || queryLower.includes('كمبيالة') || queryLower.includes('cheque') || queryLower.includes('debt')) {
-      replyText = `وفقاً لأحكام **قانون التجارة المصري رقم 17 لسنة 1999** وتطبيقات **محكمة النقض الجنائية**:
-
-1. **أركان الجريمة**: تنص **المادة (534)** على معاقبة كل من أصدر بسوء نية شيكاً لا يقابله رصيد قائم وقابل للسحب بالحبس والغرامة المالية.
-2. **سقوط الدعوى وانقضاؤها**:
-   - تسقط دعوى رجوع حامل الشيك بالتقادم بمضي **سنة واحدة** من تاريخ انقضاء ميعاد تقديم الشيك.
-   - تنقضي الدعوى الجنائية بالصلح أو الوفاء بقيمة الشيك في أي مرحلة تكون عليها الدعوى وحتى بعد صدور حكم بات.
-3. **الدفاع القانوني**: الدفع بمدنية الشيك أو ضمانته لا يعفي من المسؤولية الجنائية أمام القاضي الجنائي، إلا إذا ثبت تجريد الشيك من صفته كورقة دفع فورية أو وجود تزوير صلب/توقيع.
-
-💼 **الخطوة التالية**: ننصح بتقديم طلب استصدار أمر أداء أو تحريك جنحة شيك مباشرة للمحافظة على مواعيد السقوط.`;
-      citations = MOCK_LEGAL_CITATIONS.commercial_cheque;
-      caseBriefReady = true;
-    } else if (queryLower.includes('عقد') || queryLower.includes('شراكة') || queryLower.includes('فسخ') || queryLower.includes('تعويض') || queryLower.includes('شرط جزائي') || queryLower.includes('contract')) {
-      replyText = `استناداً إلى نصوص **القانون المدني المصري** وأحكام محكمة النقض:
-
-1. **القوة الملزمة للعقد**: تنص **المادة (147)** على أن "العقد شريعة المتعاقدين"، فلا يجوز نقضه أو تعديله إلا باتفاق الطرفين أو بمقتضى نص القانون.
-2. **الفسخ مع التعويض**: تجيز **المادة (157)** للمتعاقد المضرور عند إخلال الطرف الآخر بالتزاماته، وبعد توجيه إنذار رسمي (إعذار)، المطالبة بفسخ العقد وإلزام المخل بالتعويض عن الخسارة وفوات الكسب.
-3. **الشرط الجزائي**: صحيح ونافذ ما لم يثبت المدين أن الدائن لم يلحقه أي ضرر، أو أن تقدير التعويض كان مبالغاً فيه إلى درجة كبيرة (المادة 224).
-
-📋 **التوصية**: نوصي بتوثيق محاضر الإخلال بالالتزامات وإرسال إنذار رسمي على يد محضر قبل اتخاذ إجراءات التقاضي أمام المحكمة الاقتصادية أو المدنية.`;
-      citations = MOCK_LEGAL_CITATIONS.contract_breach;
-      caseBriefReady = true;
-    } else if (queryLower.includes('شركة') || queryLower.includes('تأسيس') || queryLower.includes('استثمار') || queryLower.includes('شريك') || queryLower.includes('corporate') || queryLower.includes('startup')) {
-      replyText = `بموجب **قانون الشركات رقم 159 لسنة 1981** وقانون الاستثمار رقم 72 لسنة 2017:
-
-1. **الكيانات الأكثر شيوعاً**:
-   - **شركة الشخص الواحد (OPC)**: مسؤولية محددة برأس المال مع شخص واحد فقط.
-   - **الشركة ذات المسؤولية المحدودة (LLC)**: مناسبة للمشاريع الناشئة والمتوسطة وتوفر حماية للذمة المالية للشركاء.
-   - **شركة المساهمة (JSC)**: ممتازة للكيانات الكبرى وجولات التمويل الاستثماري.
-2. **إجراءات التأسيس**: تتم رقمياً عبر الهيئة العامة للاستثمار والمناطق الحرة (GAFI) وتشمل استخراج السجل التجاري والبطاقة الضريبية والتسجيل بالغرفة التجارية.
-
-✨ يمكننا ترشيح نخبة من المحامين المتخصصين في تأسيس الشركات وصياغة اتفاقيات الشركاء (SHA) لحماية حقوقك.`;
-      citations = [
-        {
-          id: 'cit-corp',
-          title: 'المادة 4 و 115 من قانون الشركات رقم 159 لسنة 1981',
-          lawName: 'قانون الشركات المصري',
-          court: 'المحاكم الاقتصادية وهيئة الاستثمار',
-          articleNumber: 'م 4 & 115',
-          summary: 'تنظيم مسؤولية الشركاء وإجراءات التأسيس والحوكمة.',
-          category: 'corporate',
-          relevanceScore: 94,
-        }
-      ];
-      caseBriefReady = true;
-    } else {
-      replyText = `مرحباً بك في **المستشار القانوني الذكي لمنظومة حُكمدار**.
-
-لقد قمت بتحليل استفسارك، وأنا جاهز لتقديم المشورة القانونية الدقيقة المدعومة بالنصوص التشريعية والسوابق القضائية في المجالات التالية:
-- 🏛️ **قوانين العمل والعمال** (الفصل التعسفي، مكافأة نهاية الخدمة، عقود العمل).
-- ⚖️ **القانون التجاري وجنح الشيكات** (الشيكات بدون رصيد، إيصالات الأمانة، الأوراق المالية).
-- 📜 **القانون المدني والعقود** (فسخ العقود، التعويضات، الإخلال بالالتزامات، الشرط الجزائي).
-- 🏢 **حوكمة وتأسيس الشركات** (المسؤولية المحدودة، اتفاقيات الشركاء، النزاعات الاستثمارية).
-- 🏠 **النزاعات العقارية والإيجارات** (عقود الإيجار، دعاوى الطرد، صحة ونفاذ الملكية).
-- 👨‍👩‍👧 **الأحوال الشخصية والأسرة** (الخلع، النفقات، قسمة التركات والمواريث).
-
-تفضل بطرح تفاصيل موضوعك، وسأقوم بتحليله وتزويدك بالأسانيد القانونية وصياغة ملف قضية متكامل لإرساله لأفضل محامٍ مختص.`;
-      citations = [
-        MOCK_LEGAL_DATABASE[0],
-        MOCK_LEGAL_DATABASE[2],
-      ].map((item) => ({
-        id: item.id,
-        title: item.title,
-        lawName: item.code,
-        court: item.courtName,
-        articleNumber: item.articleNumber,
-        summary: item.keyTakeaway,
-        category: item.category,
-        relevanceScore: 90,
-      }));
-      caseBriefReady = false;
-    }
-
-    return NextResponse.json({
-      reply: replyText,
-      citations,
-      caseBriefReady,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error: any) {
-    console.error('AI Chat Error:', error);
-    return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
+  } catch (error) {
+    console.error('Legal AI Chat API Error:', error);
+    return NextResponse.json(
+      { error: 'حدث خطأ أثناء معالجة الاستشارة القانونية.' },
+      { status: 500 }
+    );
   }
 }
