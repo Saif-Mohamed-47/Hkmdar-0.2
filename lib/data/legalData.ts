@@ -11,6 +11,8 @@ export const LEGAL_CATEGORIES_INFO: Record<LegalCategory, { labelAr: string; lab
   administrative: { labelAr: 'القضاء الإداري ومجلس الدولة', labelEn: 'Administrative & State Council', icon: 'ScrollText', color: 'violet' },
   intellectual_property: { labelAr: 'الملكية الفكرية والعلامات', labelEn: 'Intellectual Property', icon: 'Sparkles', color: 'purple' },
   tax: { labelAr: 'الضرائب والجمارك', labelEn: 'Tax & Customs Law', icon: 'Coins', color: 'teal' },
+  constitutional: { labelAr: 'القضاء الدستوري والحقوق والحريات', labelEn: 'Constitutional Law & Rights', icon: 'Landmark', color: 'yellow' },
+  military: { labelAr: 'القضاء العسكري والخدمة الوطنية', labelEn: 'Military Justice & Conscription', icon: 'Shield', color: 'slate' },
 };
 
 export interface ComprehensiveLegalEntry {
