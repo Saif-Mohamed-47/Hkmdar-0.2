@@ -10,6 +10,8 @@ import { signUpUser, signInUser } from '@/lib/supabaseClient';
 import { loginSchema, registerSchema, RegisterFormData } from '@/lib/validations/authSchemas';
 import RoleSelector from './RoleSelector';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import LanguageToggle from '@/components/ui/LanguageToggle';
+import { translations } from '@/lib/data/translations';
 import {
   Mail,
   Lock,
@@ -69,7 +71,10 @@ const inputErr = 'border-rose-500/70 focus:border-rose-500 focus:ring-1 focus:ri
 export default function AuthForm({ initialMode = 'login', defaultRole = 'client' }: AuthFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setRole: setAppRole, addToast, setUser: setAppUser } = useApp();
+  const { setRole: setAppRole, addToast, setUser: setAppUser, lang } = useApp();
+
+  const roleParam = searchParams.get('role');
+  const initialSelectedRole: UserRole = (roleParam === 'lawyer' || roleParam === 'client') ? roleParam : defaultRole;
 
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const roleFromUrl = searchParams.get('role');
@@ -256,6 +261,7 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
       
       {/* Top Header Floating Controls */}
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+        <LanguageToggle />
         <ThemeToggle />
       </div>
 
@@ -265,7 +271,7 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-gold)] transition-colors"
         >
           <ArrowRight className="w-3.5 h-3.5" />
-          <span>الرئيسية</span>
+          <span>{translations[lang || 'ar'].nav.home}</span>
         </Link>
       </div>
 
@@ -280,15 +286,15 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
 
           {/* Brand content */}
           <div className="relative z-10 my-auto flex flex-col items-center text-center py-6">
-            <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl p-3 bg-black/50 border border-[#c5a059]/25 shadow-lg flex items-center justify-center">
+            <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-3xl p-3 bg-black/60 border border-[#c5a059]/30 shadow-2xl flex items-center justify-center overflow-hidden">
               <img
                 src="/hakmdar-logo.png"
-                alt="حكمدار للمحاماة والاستشارات القانونية"
+                alt="حِكِمْدار للمحاماة والاستشارات القانونية"
                 className="w-full h-full object-contain"
               />
             </div>
 
-            <div className="mt-5 space-y-1.5">
+            <div className="mt-6 space-y-1.5">
               <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
                 حِكِمْدار
               </h2>

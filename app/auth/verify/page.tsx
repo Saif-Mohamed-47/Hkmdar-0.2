@@ -16,12 +16,12 @@ function VerifyContent() {
       {/* Header */}
       <header className="w-full max-w-4xl flex items-center justify-between py-4 mb-4">
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/40 flex items-center justify-center p-1">
-            <img src="/hakmdar-logo.png" alt="حكمدار" className="w-full h-full object-contain" />
+          <div className="w-10 h-10 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/40 flex items-center justify-center p-1 overflow-hidden">
+            <img src="/hakmdar-icon.png" alt="حِكِمْدار" className="w-full h-full object-contain" />
           </div>
           <div className="text-right">
             <span className="font-extrabold text-xl tracking-tight text-[var(--text-primary)] block">
-              حكمدار
+              حِكِمْدار
             </span>
             <p className="text-[10px] text-[var(--accent-gold)] font-medium">للمحاماة والاستشارات القانونية</p>
           </div>
