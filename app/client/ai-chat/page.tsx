@@ -85,6 +85,7 @@ const INITIAL_MESSAGES: ChatMessage[] = [
 
 export default function LegalAIChatPage() {
   const { user, addToast } = useApp();
+  const router = useRouter();
   const storageKey = `hakmdar_chat_sessions_${user?.id || user?.email || 'default'}`;
 
   // User-isolated storage key
@@ -127,7 +128,7 @@ export default function LegalAIChatPage() {
 
   // Modals state
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
-  const [, setIsMatchModalOpen] = useState(false);
+  const [isMatchModalOpen, setIsMatchModalOpen] = useState(false);
   const [generatedBrief, setGeneratedBrief] = useState<Partial<CaseIntake> | undefined>(undefined);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
