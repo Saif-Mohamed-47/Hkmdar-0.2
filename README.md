@@ -2,18 +2,17 @@
 ### Sovereign AI-Powered Legal Operating System & Egyptian Dialectal RAG
 
 <p align="center">
-  <img src="public/hakmdar-sword-icon.png" width="130" alt="HAKMDAR Sword & Scales Logo" />
+  <img src="public/hakmdar-scales-sword.png" width="140" alt="HAKMDAR Sword & Scales Logo" />
 </p>
 
 <p align="center">
-  <strong>منظومة برمجية حوسبية متكاملة لإدارة مكاتب المحاماة والاستشارات القانونية التوليدية وتكييف الدعاوى وفق التشريعات المصرية وأحكام محكمة النقض.</strong>
+  <strong>المنظومة الرقمية السيادية لإدارة مكاتب المحاماة والاستشارات القانونية التوليدية وتكييف الدعاوى القضائية وفق التشريعات المصرية وأحكام محكمة النقض.</strong>
 </p>
 
 <p align="center">
+  <a href="#-key-highlights--innovations">Key Highlights</a> •
   <a href="#-tech-stack">Tech Stack</a> •
-  <a href="#-key-features">Key Features</a> •
-  <a href="#-system-architecture">Architecture</a> •
-  <a href="#-graduation-book--presentation">Graduation Book & PPT</a> •
+  <a href="#-core-modules">Core Modules</a> •
   <a href="#-getting-started">Getting Started</a>
 </p>
 
@@ -40,16 +39,22 @@
 - **Styling & Aesthetics:** Dark Luxe Glassmorphism + Tailwind CSS + Lucide Icons
 - **AI Inference:** Google Gemini 1.5 Pro Streaming SDK + Dialectal Prompt RAG
 - **Backend & Database:** Supabase (PostgreSQL + Auth + Storage + RLS Policies)
-- **Document Processing:** PDF Generation (Playwright) + PPTX Presentation Engine (`python-pptx`)
 
 ---
 
-## 📚 Graduation Project Book & Presentation
+## 📱 Core Modules
 
-الملفات الرسمية المعتمدة للمشروع متوفرة وجاهزة داخل مجلد `public/`:
-- 📄 **كتاب مشروع التخرج الهندسي (10 صفحات):** `public/HAKMDAR_Engineering_Graduation_Book_10Pages.pdf`
-- 💻 **العرض التقديمي الأصلي PowerPoint:** `public/HAKMDAR_Graduation_Presentation.pptx`
-- 🌐 **عرض الويب التفاعلي بالسلايدات:** `public/hakmdar_presentation.html`
+- **👤 بوابة الموكل (Client Portal):**
+  - المستشار القانوني الذكي ومحادثة البث اللحظي.
+  - البحث المتقدم في 20 تخصصاً تشريعياً وسوابق محكمة النقض.
+  - دليل المحامين المعتمدين مع الفلترة في 27 محافظة.
+  - متابعة ملفات القضايا المرفوعة وحالاتها.
+
+- **⚖️ بوابة المحامي (Lawyer Portal):**
+  - لوحة تحكم المكتب ومؤشرات القضايا والجلسات.
+  - سجل ملفات الدعاوى وحافظة المستندات القضائية (PDF / Word / Excel).
+  - استوديو الصياغة القضائية الآلية لمذكرات الدفاع وعرائض الدعاوى.
+  - الملف التعريفي للمحامي وإدارة التخصصات ورقم القيد.
 
 ---
 
