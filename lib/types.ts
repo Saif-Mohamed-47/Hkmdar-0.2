@@ -45,7 +45,15 @@ export type LegalCategory =
   | 'intellectual_property' 
   | 'constitutional'
   | 'military'
-  | 'tax';
+  | 'tax'
+  | 'economic_crimes'
+  | 'cybercrime'
+  | 'maritime_aviation'
+  | 'arbitration'
+  | 'insurance_compensation'
+  | 'environment_energy'
+  | 'immigration_citizenship'
+  | 'sports_law';
 
 export interface ChatMessage {
   id: string;
@@ -73,6 +81,17 @@ export interface CaseTimelineEvent {
   importance?: 'normal' | 'critical';
 }
 
+export interface CaseDocument {
+  id: string;
+  caseId: string;
+  fileName: string;
+  fileSize: number;
+  fileType: 'pdf' | 'word' | 'excel' | 'image' | 'other';
+  fileUrl?: string;
+  uploadedAt: string;
+  uploadedBy?: string;
+}
+
 export interface CaseIntake {
   id: string;
   clientId: string;
@@ -91,6 +110,7 @@ export interface CaseIntake {
   relevantStatutes: LegalCitation[];
   clientTimeline: CaseTimelineEvent[];
   aiStrategicRecommendation: string;
+  documents?: CaseDocument[];
   feeEstimate?: string;
   createdAt: string;
   updatedAt: string;

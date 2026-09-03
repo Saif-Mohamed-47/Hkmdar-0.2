@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate File Type (PDF or DOCX only)
+    // Validate File Type (PDF, Word DOC/DOCX, Excel XLS/XLSX/CSV)
     const fileNameLower = file.name.toLowerCase();
     const isPdf = file.type === 'application/pdf' || fileNameLower.endsWith('.pdf');
     const isDocx = 
@@ -57,10 +57,17 @@ export async function POST(req: NextRequest) {
       file.type === 'application/msword' ||
       fileNameLower.endsWith('.docx') ||
       fileNameLower.endsWith('.doc');
+    const isExcel =
+      file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      file.type === 'application/vnd.ms-excel' ||
+      file.type === 'text/csv' ||
+      fileNameLower.endsWith('.xlsx') ||
+      fileNameLower.endsWith('.xls') ||
+      fileNameLower.endsWith('.csv');
 
-    if (!isPdf && !isDocx) {
+    if (!isPdf && !isDocx && !isExcel) {
       return NextResponse.json(
-        { error: 'نوع الملف غير مدعوم. يسمح فقط بملفات PDF و DOCX' },
+        { error: 'نوع الملف غير مدعوم. يسمح بملفات PDF و Word (DOC/DOCX) و Excel (XLS/XLSX/CSV)' },
         { status: 400 }
       );
     }

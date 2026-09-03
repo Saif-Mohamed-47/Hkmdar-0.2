@@ -28,7 +28,7 @@ export interface SignUpParams {
   password: string;
   role: UserRole;
   fullName: string;
-  phone: string;
+  phone?: string;
   barNumber?: string;
   specialty?: LegalCategory;
   location?: string;
@@ -105,6 +105,34 @@ export async function signInUser(params: SignInParams) {
 
   return { user: data.user, session: data.session, error: null };
 }
+
+export async function signInWithOAuth(provider: 'google', role: UserRole = 'client') {
+  if (!isSupabaseConfigured) {
+    return { data: { url: null }, error: null };
+  }
+
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback?role=${role}` : undefined,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account',
+        },
+      },
+    });
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  } catch (err: any) {
+    return { data: null, error: err };
+  }
+}
+
 
 /**
  * Sign out current user.

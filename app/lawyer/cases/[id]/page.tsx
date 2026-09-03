@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useApp } from '@/lib/context/AppContext';
 import { CaseStatus } from '@/lib/types';
 import CaseStatusBadge from '@/components/lawyer/CaseStatusBadge';
+import CaseDocumentManager from '@/components/lawyer/CaseDocumentManager';
 import { 
   ArrowRight, 
   FileText, 
@@ -236,6 +237,40 @@ export default function LawyerCaseDetailPage({ params }: { params: Promise<{ id:
             ))}
           </div>
         </div>
+
+        {/* Section 2: Uploaded Case Documents & Attachments (PDF / Word / Excel) */}
+        <CaseDocumentManager
+          caseId={caseData.id}
+          initialDocuments={caseData.documents || [
+            {
+              id: 'doc-sample-1',
+              caseId: caseData.id,
+              fileName: 'صحيفة_الدعوى_وعريضة_الافتتاح.pdf',
+              fileSize: 1420000,
+              fileType: 'pdf',
+              uploadedAt: 'اليوم، 10:30 ص',
+              uploadedBy: 'المحامي المسند إليه',
+            },
+            {
+              id: 'doc-sample-2',
+              caseId: caseData.id,
+              fileName: 'مذكرة_الدفاع_والدفوع_الشكلية.docx',
+              fileSize: 580000,
+              fileType: 'word',
+              uploadedAt: 'اليوم، 11:15 ص',
+              uploadedBy: 'المحامي المسند إليه',
+            },
+            {
+              id: 'doc-sample-3',
+              caseId: caseData.id,
+              fileName: 'كشف_حساب_المستحقات_والتعويضات_المالية.xlsx',
+              fileSize: 320000,
+              fileType: 'excel',
+              uploadedAt: 'اليوم، 11:45 ص',
+              uploadedBy: 'المحامي المسند إليه',
+            }
+          ]}
+        />
 
         {/* Section 3: Statutory Citations */}
         {caseData.relevantStatutes && caseData.relevantStatutes.length > 0 && (

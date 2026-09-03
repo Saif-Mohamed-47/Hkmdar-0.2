@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '@/lib/context/AppContext';
 import { Globe } from 'lucide-react';
 
@@ -11,6 +11,25 @@ interface LanguageToggleProps {
 
 export default function LanguageToggle({ className = '', showLabel = false }: LanguageToggleProps) {
   const { lang, setLang } = useApp();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <button
+        type="button"
+        className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold bg-[var(--bg-surface)] text-[var(--text-secondary)] border-[var(--border-subtle)] ${className}`}
+        aria-label="تبديل اللغة"
+      >
+        <Globe className="w-3.5 h-3.5 text-[var(--accent-gold)] shrink-0" />
+        <span className="font-semibold">EN</span>
+      </button>
+    );
+  }
+
   const isArabic = lang === 'ar';
 
   const toggleLanguage = () => {

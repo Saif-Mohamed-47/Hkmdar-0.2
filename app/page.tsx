@@ -12,7 +12,8 @@ import {
   FileText, 
   Lock, 
   ChevronLeft,
-  Briefcase
+  Briefcase,
+  BookOpen
 } from 'lucide-react';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import LanguageToggle from '@/components/ui/LanguageToggle';
@@ -23,10 +24,10 @@ export default function LandingPage() {
   const t = translations[lang || 'ar'];
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col selection:bg-[#c5a059] selection:text-[#060a14] transition-colors duration-200">
+    <div className="min-h-screen w-full bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col selection:bg-[#c5a059] selection:text-[#060a14] transition-colors duration-200">
       
       {/* Top Brand Bar */}
-      <header className="border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/90 backdrop-blur-md shrink-0 z-40">
+      <header className="border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/90 backdrop-blur-md sticky top-0 shrink-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3.5 group">
             <div className="w-12 h-12 rounded-xl bg-[var(--bg-input)] border border-[var(--accent-gold)]/40 p-1.5 flex items-center justify-center shadow-lg group-hover:border-[var(--accent-gold)] transition-colors overflow-hidden">
@@ -83,12 +84,6 @@ export default function LandingPage() {
             <p className="text-sm sm:text-lg text-[var(--text-secondary)] max-w-3xl mx-auto leading-relaxed">
               {t.hero.description}
             </p>
-          </div>
-
-          {/* Institutional Badge */}
-          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] text-xs sm:text-sm font-semibold shadow-md">
-            <Scale className="w-4 h-4 text-[var(--accent-gold)]" />
-            <span>{t.hero.badge}</span>
           </div>
 
           {/* Dual Entrance Portals */}

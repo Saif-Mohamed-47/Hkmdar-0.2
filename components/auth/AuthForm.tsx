@@ -1,16 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useApp } from '@/lib/context/AppContext';
 import { UserRole, LegalCategory, User } from '@/lib/types';
-import { LEGAL_CATEGORIES_INFO } from '@/lib/data/legalData';
-import { signUpUser, signInUser } from '@/lib/supabaseClient';
+import { LEGAL_CATEGORIES_INFO, EGYPTIAN_GOVERNORATES } from '@/lib/data/legalData';
+import { signUpUser, signInUser, signInWithOAuth } from '@/lib/supabaseClient';
 import { loginSchema, registerSchema, RegisterFormData } from '@/lib/validations/authSchemas';
 import RoleSelector from './RoleSelector';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import LanguageToggle from '@/components/ui/LanguageToggle';
+import SearchableLocationSelect from '@/components/ui/SearchableLocationSelect';
+import SearchableSpecialtySelect from '@/components/ui/SearchableSpecialtySelect';
 import { translations } from '@/lib/data/translations';
 import {
   Mail,
@@ -27,7 +29,9 @@ import {
   Building2,
   Scale,
   Gavel,
-  ArrowRight
+  ArrowRight,
+  FileCheck,
+  X
 } from 'lucide-react';
 
 interface AuthFormProps {
@@ -73,9 +77,6 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
   const searchParams = useSearchParams();
   const { setRole: setAppRole, addToast, setUser: setAppUser, lang } = useApp();
 
-  const roleParam = searchParams.get('role');
-  const initialSelectedRole: UserRole = (roleParam === 'lawyer' || roleParam === 'client') ? roleParam : defaultRole;
-
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const roleFromUrl = searchParams.get('role');
   const [role, setSelectedRole] = useState<UserRole>(() => {
@@ -94,14 +95,34 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
   const [location, setLocation] = useState('القاهرة');
   const [barNumber, setBarNumber] = useState('');
   const [specialty, setSpecialty] = useState<LegalCategory>('labor');
-  const [agreeTerms, setAgreeTerms] = useState(true);
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+
+  // Modals for Terms & Privacy
+  const [activeModal, setActiveModal] = useState<'terms' | 'privacy' | null>(null);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  // Role is initialized from searchParams or defaultRole above
+  const isLawyer = role === 'lawyer';
+
+  // Dynamic Validation for Disabling the Submit Button
+  const isFormValid = useMemo(() => {
+    if (mode === 'login') {
+      return email.trim().length > 0 && password.length >= 6;
+    } else {
+      // Register validation
+      const isNameValid = fullName.trim().length >= 3;
+      const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+      const isPasswordValid = password.length >= 6;
+      const isTermsAgreed = agreeTerms === true;
+      const isBarValid = isLawyer ? barNumber.trim().length >= 4 : true;
+
+      return isNameValid && isEmailValid && isPasswordValid && isTermsAgreed && isBarValid;
+    }
+  }, [mode, email, password, fullName, agreeTerms, isLawyer, barNumber]);
 
   const clearErr = (field: string) => setErrors((prev) => ({ ...prev, [field]: '' }));
 
@@ -113,6 +134,26 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
       router.replace('/login');
     } else {
       router.replace(role === 'lawyer' ? '/register?role=lawyer' : '/register?role=client');
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    setIsGoogleLoading(true);
+    setServerError(null);
+    try {
+      const { data, error } = await signInWithOAuth('google', role);
+      if (error) {
+        throw error;
+      }
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'تعذر الاتصال بخدمة Google المصادقة.';
+      setServerError(msg);
+      addToast({ type: 'error', title: 'خطأ تسجيل الدخول', message: msg });
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -137,7 +178,12 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
       try {
         const { user, error } = await signInUser({ email, password });
         if (error) {
-          const msg = error.message || 'فشل تسجيل الدخول. يرجى التحقق من صحة البيانات.';
+          let msg = error.message || 'فشل تسجيل الدخول. يرجى التحقق من صحة البيانات.';
+          if (error.message?.includes('Invalid login credentials')) {
+            msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة، أو لم يتم إنشاء الحساب بعد. يرجى الضغط على "إنشاء حساب" أولاً أو التأكد من كلمة المرور.';
+          } else if (error.message?.includes('Email not confirmed')) {
+            msg = 'يرجى تأكيد البريد الإلكتروني عبر الرابط المرسل إلى صندوق الوارد الخاص بك.';
+          }
           setServerError(msg);
           addToast({ type: 'error', title: 'تعذر تسجيل الدخول', message: msg });
           return;
@@ -172,7 +218,7 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
       const registerData: RegisterFormData = {
         fullName,
         email,
-        phone,
+        phone: phone.trim() ? phone : undefined,
         password,
         location,
         role,
@@ -198,7 +244,7 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
           password,
           role,
           fullName,
-          phone,
+          phone: phone.trim(),
           barNumber: role === 'lawyer' ? barNumber : undefined,
           specialty: role === 'lawyer' ? specialty : undefined,
           location,
@@ -210,7 +256,6 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
           return;
         }
 
-        // Email confirmation check
         if (!session) {
           addToast({
             type: 'info',
@@ -253,7 +298,6 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
     }
   };
 
-  const isLawyer = role === 'lawyer';
   const icc = (field: string) => (errors[field] ? inputErr : inputOk);
 
   return (
@@ -279,17 +323,21 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
         
         {/* BRAND PANEL (right side in RTL) */}
-        <div className="bg-gradient-to-b from-[#060a14] via-[#091122] to-[#04070e] p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden order-first lg:order-last">
-          
-          {/* Subtle overlay */}
+        <div 
+          style={{ backgroundColor: '#060a14', minHeight: '520px' }}
+          className="bg-gradient-to-b from-[#060a14] via-[#091122] to-[#04070e] p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden order-first lg:order-last"
+        >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#1e293b20,transparent_70%)] pointer-events-none" />
 
-          {/* Brand content */}
           <div className="relative z-10 my-auto flex flex-col items-center text-center py-6">
-            <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-3xl p-3 bg-black/60 border border-[#c5a059]/30 shadow-2xl flex items-center justify-center overflow-hidden">
+            <div 
+              style={{ width: '180px', height: '180px', maxWidth: '180px', maxHeight: '180px' }}
+              className="w-44 h-44 rounded-3xl p-3 bg-black/60 border border-[#c5a059]/40 shadow-2xl flex items-center justify-center overflow-hidden shrink-0"
+            >
               <img
                 src="/hakmdar-logo.png"
                 alt="حِكِمْدار للمحاماة والاستشارات القانونية"
+                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                 className="w-full h-full object-contain"
               />
             </div>
@@ -343,6 +391,49 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
               </p>
             </div>
 
+            {/* Quick Google Sign In / Register */}
+            <button
+              type="button"
+              onClick={handleGoogleAuth}
+              disabled={isGoogleLoading || isLoading}
+              className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] hover:bg-[var(--bg-surface-hover)] text-xs font-bold text-[var(--text-primary)] shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50"
+            >
+              {isGoogleLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin text-[var(--accent-gold)]" />
+              ) : (
+                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+              )}
+              <span>
+                {mode === 'login' ? 'المتابعة بحساب Google' : 'التسجيل السريع بحساب Google'}
+              </span>
+            </button>
+
+            {/* Divider */}
+            <div className="relative flex items-center justify-center">
+              <div className="border-t border-[var(--border-subtle)] w-full" />
+              <span className="bg-[var(--bg-surface)] px-3 text-[11px] text-[var(--text-muted)] font-medium shrink-0">
+                أو عبر البريد الإلكتروني
+              </span>
+              <div className="border-t border-[var(--border-subtle)] w-full" />
+            </div>
+
             {/* Role Selector (register only) */}
             {mode === 'register' && (
               <RoleSelector
@@ -387,7 +478,8 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
                     </div>
                   </Field>
 
-                  <Field label="رقم الهاتف" required error={errors.phone}>
+                  {/* Phone (Optional for Client, Recommended/Required for Lawyer) */}
+                  <Field label={isLawyer ? 'رقم الهاتف والتواصل' : 'رقم الهاتف (اختياري)'} required={isLawyer} error={errors.phone}>
                     <div className="relative">
                       <Phone className="w-4 h-4 text-[var(--text-muted)] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
@@ -425,37 +517,20 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
                       </Field>
 
                       <Field label="التخصص القضائي الرئيسي">
-                        <select
+                        <SearchableSpecialtySelect
                           value={specialty}
-                          onChange={(e) => setSpecialty(e.target.value as LegalCategory)}
+                          onChange={(val) => setSpecialty(val as LegalCategory)}
                           disabled={isLoading}
-                          className="w-full px-3.5 py-2.5 rounded-lg bg-[var(--bg-input)] border border-[var(--border-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-gold)]"
-                        >
-                          {(Object.keys(LEGAL_CATEGORIES_INFO) as LegalCategory[]).map((k) => (
-                            <option key={k} value={k}>
-                              {LEGAL_CATEGORIES_INFO[k].labelAr}
-                            </option>
-                          ))}
-                        </select>
+                          allowAll={false}
+                        />
                       </Field>
 
                       <Field label="المحافظة ومقر المكتب">
-                        <div className="relative">
-                          <MapPin className="w-4 h-4 text-[var(--text-muted)] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                          <select
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                            disabled={isLoading}
-                            className={`${inputBase} ${inputOk} pr-10 pl-3`}
-                          >
-                            <option value="القاهرة">القاهرة</option>
-                            <option value="الجيزة">الجيزة</option>
-                            <option value="الإسكندرية">الإسكندرية</option>
-                            <option value="المنصورة والدقهلية">المنصورة والدقهلية</option>
-                            <option value="طنطا والغربية">طنطا والغربية</option>
-                            <option value="أسيوط والصعيد">أسيوط والصعيد</option>
-                          </select>
-                        </div>
+                        <SearchableLocationSelect
+                          value={location}
+                          onChange={setLocation}
+                          disabled={isLoading}
+                        />
                       </Field>
                     </div>
                   )}
@@ -534,9 +609,21 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
                     />
                     <span className="text-xs text-[var(--text-secondary)] leading-relaxed">
                       أوافق على{' '}
-                      <span className="text-[var(--accent-gold)] font-semibold hover:underline">شروط الاستخدام</span>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setActiveModal('terms'); }}
+                        className="text-[var(--accent-gold)] font-semibold hover:underline cursor-pointer"
+                      >
+                        شروط الاستخدام
+                      </button>
                       {' '}و{' '}
-                      <span className="text-[var(--accent-gold)] font-semibold hover:underline">ميثاق سرية البيانات القضائية</span>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setActiveModal('privacy'); }}
+                        className="text-[var(--accent-gold)] font-semibold hover:underline cursor-pointer"
+                      >
+                        ميثاق سرية البيانات القضائية
+                      </button>
                     </span>
                   </label>
                   {errors.agreeTerms && (
@@ -561,12 +648,16 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
                 </div>
               )}
 
-              {/* Submit Button */}
+              {/* Submit Button (Disabled until required fields complete) */}
               <button
                 type="submit"
                 id="auth-submit-btn"
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm btn-legal-gold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                disabled={isLoading || !isFormValid}
+                className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition-all duration-200 cursor-pointer ${
+                  isFormValid && !isLoading
+                    ? 'btn-legal-gold shadow-lg shadow-[var(--accent-gold)]/10'
+                    : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed opacity-60'
+                }`}
               >
                 {isLoading ? (
                   <>
@@ -614,6 +705,61 @@ export default function AuthForm({ initialMode = 'login', defaultRole = 'client'
         </div>
 
       </div>
+
+      {/* Interactive Terms & Privacy Modal */}
+      {activeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-card)] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 text-right relative">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
+              <div className="flex items-center gap-2">
+                <FileCheck className="w-5 h-5 text-[var(--accent-gold)]" />
+                <h3 className="text-base font-bold text-[var(--text-primary)]">
+                  {activeModal === 'terms' ? 'شروط وأحكام استخدام منصة حِكِمْدار' : 'ميثاق سرية وأمان البيانات القضائية'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="p-1.5 rounded-lg hover:bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="text-xs text-[var(--text-secondary)] leading-relaxed space-y-3 max-h-72 overflow-y-auto pr-1">
+              {activeModal === 'terms' ? (
+                <>
+                  <p>1. <strong>طبيعة الخدمة</strong>: منصة حكمدار هي نظام تقني قضائي يهدف إلى تمكين المواطنين من الوصول للرأي القانوني الموثق وتسهيل التمثيل القضائي عبر المحامين المقيدين بنقابة المحامين المصرية.</p>
+                  <p>2. <strong>مسؤولية البيانات</strong>: يقر المستخدم بصحة البيانات والوقائع المدخلة، وأن المنظومة الذكية تقدم استئناساً وتكييفاً أولياً يخضع للتدقيق المباشر من المحامي الوكيل.</p>
+                  <p>3. <strong>الالتزام بالقوانين المصرية</strong>: تخضع كافة الخدمات لقوانين جمهورية مصر العربية وقانون المحاماة رقم 17 لسنة 1983 وتعديلاته.</p>
+                </>
+              ) : (
+                <>
+                  <p>1. <strong>السرية المهنية</strong>: تلتزم المنصة بأعلى معايير السرية القضائية المشددة وفقاً لأحكام قانون حماية البيانات الشخصية رقم 151 لسنة 2020 وميثاق شرف مهنة المحاماة.</p>
+                  <p>2. <strong>التشفير والوصول</strong>: تشفر كافة المستندات والتفاصيل القضائية ولا يحق الاطلاع عليها إلا للموكل ومحاميه الموكل رسمياً بالدعوى.</p>
+                  <p>3. <strong>عدم المشاركة</strong>: لا يتم بيع أو مشاركة أي بيانات للمتقاضين أو ملفات القضايا مع أي أطراف تجارية أو إعلانية مطلقاً.</p>
+                </>
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-[var(--border-subtle)] flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setAgreeTerms(true);
+                  setActiveModal(null);
+                  clearErr('agreeTerms');
+                }}
+                className="px-5 py-2.5 rounded-xl btn-legal-gold text-xs font-bold cursor-pointer"
+              >
+                موافق ومتابعة التسجيل
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '@/lib/context/AppContext';
 import { Sun, Moon } from 'lucide-react';
 
@@ -11,6 +11,25 @@ interface ThemeToggleProps {
 
 export default function ThemeToggle({ className = '', showLabel = false }: ThemeToggleProps) {
   const { theme, toggleTheme } = useApp();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // During SSR and before mounting on client, render a consistent placeholder
+  if (!mounted) {
+    return (
+      <button
+        type="button"
+        className={`inline-flex items-center gap-2 p-2 rounded-xl border bg-[#0b1224] text-amber-300 border-slate-800 transition-all duration-200 opacity-80 ${className}`}
+        aria-label="التبديل إلى الوضع النهاري"
+      >
+        <Sun className="w-4 h-4 text-amber-300" />
+      </button>
+    );
+  }
+
   const isDark = theme === 'dark';
 
   return (

@@ -12,16 +12,17 @@ export default function ClientLayout({
 }) {
   const { role } = useApp();
   const router = useRouter();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
-    if (role === 'lawyer') {
+    if (mounted && role === 'lawyer') {
       router.replace('/lawyer/dashboard');
     }
-  }, [role, router]);
-
-  if (role === 'lawyer') {
-    return null;
-  }
+  }, [mounted, role, router]);
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col transition-colors duration-200">

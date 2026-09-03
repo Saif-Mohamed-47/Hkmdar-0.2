@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useApp } from '@/lib/context/AppContext';
 import { LegalCategory, LawyerProfile } from '@/lib/types';
-import { LEGAL_CATEGORIES_INFO } from '@/lib/data/legalData';
+import { LEGAL_CATEGORIES_INFO, EGYPTIAN_GOVERNORATES } from '@/lib/data/legalData';
 import { 
   Users, 
   Search, 
@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import LawyerMatchModal from '@/components/client/LawyerMatchModal';
 import CaseSummaryModal from '@/components/client/CaseSummaryModal';
+import MultiLocationSelect from '@/components/ui/MultiLocationSelect';
+import MultiSpecialtySelect from '@/components/ui/MultiSpecialtySelect';
 import { useRouter } from 'next/navigation';
 
 export default function LawyersDirectoryPage() {
@@ -25,8 +27,8 @@ export default function LawyersDirectoryPage() {
   const router = useRouter();
 
   const [query, setQuery] = useState('');
-  const [selectedSpecialty, setSelectedSpecialty] = useState<LegalCategory | 'all'>('all');
-  const [selectedLocation, setSelectedLocation] = useState<string>('all');
+  const [selectedSpecialties, setSelectedSpecialties] = useState<LegalCategory[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   
   // Modals
   const [matchModalOpen, setMatchModalOpen] = useState(false);
@@ -41,10 +43,12 @@ export default function LawyersDirectoryPage() {
       lawyer.bio.toLowerCase().includes(query.toLowerCase().trim());
 
     const matchesSpecialty =
-      selectedSpecialty === 'all' || lawyer.specialties.includes(selectedSpecialty);
+      selectedSpecialties.length === 0 ||
+      selectedSpecialties.some((spec) => lawyer.specialties.includes(spec));
 
     const matchesLocation =
-      selectedLocation === 'all' || lawyer.location.includes(selectedLocation);
+      selectedLocations.length === 0 ||
+      selectedLocations.some((loc) => lawyer.location.includes(loc.split(' ')[0]));
 
     return matchesQuery && matchesSpecialty && matchesLocation;
   });
@@ -99,35 +103,22 @@ export default function LawyersDirectoryPage() {
             />
           </div>
 
-          {/* Specialty Select */}
+          {/* Multi Specialty Select */}
           <div>
-            <select
-              value={selectedSpecialty}
-              onChange={(e) => setSelectedSpecialty(e.target.value as LegalCategory | 'all')}
-              className="w-full px-3 py-2.5 rounded-xl bg-[#080e1c] border border-slate-800 text-xs text-white focus:outline-none focus:border-[#c5a059]"
-            >
-              <option value="all">جميع التخصصات القانونية</option>
-              {(Object.keys(LEGAL_CATEGORIES_INFO) as LegalCategory[]).map((key) => (
-                <option key={key} value={key}>
-                  {LEGAL_CATEGORIES_INFO[key].labelAr}
-                </option>
-              ))}
-            </select>
+            <MultiSpecialtySelect
+              selectedSpecialties={selectedSpecialties}
+              onChange={setSelectedSpecialties}
+              placeholder="تصفية حسب التخصصات..."
+            />
           </div>
 
-          {/* Location Select */}
+          {/* Multi Location Select */}
           <div>
-            <select
-              value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl bg-[#080e1c] border border-slate-800 text-xs text-white focus:outline-none focus:border-[#c5a059]"
-            >
-              <option value="all">جميع المحافظات والمناطق</option>
-              <option value="القاهرة">القاهرة الكبرى</option>
-              <option value="الجيزة">الجيزة</option>
-              <option value="الإسكندرية">الإسكندرية</option>
-              <option value="المنصورة">المنصورة والدلتا</option>
-            </select>
+            <MultiLocationSelect
+              selectedLocations={selectedLocations}
+              onChange={setSelectedLocations}
+              placeholder="تصفية حسب المحافظات..."
+            />
           </div>
 
         </div>

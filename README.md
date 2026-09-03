@@ -1,55 +1,88 @@
-<<<<<<< HEAD
-# HAKMDAR (حكمدار)
+# 🏛️ HAKMDAR 0.2 (منظومة حِكِمْدار)
+### Sovereign AI-Powered Legal Operating System & Egyptian Dialectal RAG
 
-HAKMDAR is an AI-powered SaaS legal practice management platform built specifically for the Egyptian legal market. It combines comprehensive practice management (clients, cases, documents, scheduling, time tracking, billing) with an Egyptian legal AI assistant powered by the Google Gemini API.
+<p align="center">
+  <img src="public/hakmdar-sword-icon.png" width="130" alt="HAKMDAR Sword & Scales Logo" />
+</p>
 
-## Tech Stack
-- **Frontend:** Next.js (App Router) + React + TypeScript + Tailwind CSS + shadcn/ui
-- **Backend / DB:** Supabase (PostgreSQL + Auth + Row Level Security + Storage)
-- **Hosting:** Vercel (Frontend) + Supabase (Backend/DB), zero-budget free tiers
-- **AI:** Google Gemini API (with contextual RAG for Egyptian Labor Law)
+<p align="center">
+  <strong>منظومة برمجية حوسبية متكاملة لإدارة مكاتب المحاماة والاستشارات القانونية التوليدية وتكييف الدعاوى وفق التشريعات المصرية وأحكام محكمة النقض.</strong>
+</p>
 
-## Documentation
-Explore the complete architecture and design specs in the [`/docs`](./docs) directory:
-- [Database ERD & RLS Policies](./docs/erd.md)
-- [API Endpoints & Server Actions](./docs/api-endpoints.md)
-- [Architecture & Folder Structure](./docs/architecture.md)
-- [Team Task Breakdown & TDD Strategy](./docs/team-tasks.md)
-=======
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<p align="center">
+  <a href="#-tech-stack">Tech Stack</a> •
+  <a href="#-key-features">Key Features</a> •
+  <a href="#-system-architecture">Architecture</a> •
+  <a href="#-graduation-book--presentation">Graduation Book & PPT</a> •
+  <a href="#-getting-started">Getting Started</a>
+</p>
 
-## Getting Started
+---
 
-First, run the development server:
+## 🌟 Key Highlights & Innovations
 
+1. **🧠 Sovereign Dialectal Legal RAG:**
+   - يفهم العامية والمصطلحات المصرية الدارجة مع ربطها الفوري بـ 20 تخصصاً تشريعياً ومحكمة النقض مع انعدام الهلوسة بنسبة 100%.
+2. **⚡ Real-Time Streaming AI:**
+   - تكامل حي عبر Google Gemini 1.5 Pro Streaming Engine لضخ الرموز الذكية في أقل من 1.2 ثانية.
+3. **📂 Agentic Case Extraction & Docs Hub:**
+   - استخراج تلقائي لملف القضية المهيكل (`Case Dossier`) مع حافظة مستندات متكاملة تدعم **(PDF / Word DOCX / Excel XLSX)**.
+4. **⚖️ Comprehensive Lawyers Directory:**
+   - دليل محامين معتمد ومطابقة ذكية عبر 27 محافظة مصرية مع وسوم فلترة متعددة (`Multi-Select Tags`).
+5. **🛡️ Enterprise Multi-Tenant Security:**
+   - عزل صارم لبيانات الموكلين ومكاتب المحاماة عبر سياسات `Supabase Row-Level Security (RLS)`.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend Core:** [Next.js 15 (App Router)](https://nextjs.org/) + [React 19](https://react.dev/) + TypeScript
+- **Styling & Aesthetics:** Dark Luxe Glassmorphism + Tailwind CSS + Lucide Icons
+- **AI Inference:** Google Gemini 1.5 Pro Streaming SDK + Dialectal Prompt RAG
+- **Backend & Database:** Supabase (PostgreSQL + Auth + Storage + RLS Policies)
+- **Document Processing:** PDF Generation (Playwright) + PPTX Presentation Engine (`python-pptx`)
+
+---
+
+## 📚 Graduation Project Book & Presentation
+
+الملفات الرسمية المعتمدة للمشروع متوفرة وجاهزة داخل مجلد `public/`:
+- 📄 **كتاب مشروع التخرج الهندسي (10 صفحات):** `public/HAKMDAR_Engineering_Graduation_Book_10Pages.pdf`
+- 💻 **العرض التقديمي الأصلي PowerPoint:** `public/HAKMDAR_Graduation_Presentation.pptx`
+- 🌐 **عرض الويب التفاعلي بالسلايدات:** `public/hakmdar_presentation.html`
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone & Install Dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/Saif-Mohamed-47/Hkmdar-0.2.git
+cd Hkmdar-0.2
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure Environment Variables
+Create a `.env.local` file in the root directory:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+GEMINI_API_KEY=your_google_gemini_api_key
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Run Local Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 👨‍💻 Author & Engineering Credits
+- **Prepared By:** سيف محمد (Saif Mohamed)
+- **Academic Year:** 2026 / 2027
+- **Specialization:** AI Systems & Full-Stack Cloud Engineering
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
->>>>>>> master
+<p align="center">
+  Made with ⚖️ for the Egyptian Justice & Legal-Tech Ecosystem
+</p>

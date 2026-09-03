@@ -266,39 +266,92 @@ export default function LegalAIChatPage() {
     });
   };
 
-  const sendQuery = async (userMsgText: string, currentHistory: ChatMessage[]) => {
+  const executeStreamingQuery = async (textToSend: string, baseHistory: ChatMessage[]) => {
+    const userMessage: ChatMessage = {
+      id: createChatMessageId('user'),
+      sender: 'user',
+      text: textToSend,
+      timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    const currentWithUser = [...baseHistory, userMessage];
+    updateCurrentSessionMessages(currentWithUser);
+
+    const assistantPlaceholderId = createChatMessageId('assistant');
+    let assistantText = '';
+    let citations: LegalCitation[] = [];
+    let caseBriefReady = false;
+
     setIsLoading(true);
+
     try {
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: userMsgText,
-          history: currentHistory.map((m) => ({ sender: m.sender, text: m.text })),
+          message: textToSend,
+          history: baseHistory.map((m) => ({ sender: m.sender, text: m.text })),
+          stream: true,
         }),
       });
 
       if (!response.ok) throw new Error('Failed to get response');
 
-      const data = await response.json();
+      if (response.headers.get('Content-Type')?.includes('text/event-stream') && response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
 
-      const assistantMessage: ChatMessage = {
-        id: createChatMessageId('assistant'),
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.text) {
+                  assistantText += data.text;
+                  setMessages([
+                    ...currentWithUser,
+                    {
+                      id: assistantPlaceholderId,
+                      sender: 'assistant',
+                      text: assistantText,
+                      timestamp: 'الآن',
+                      citations: [],
+                      caseBriefReady: false,
+                    },
+                  ]);
+                }
+                if (data.citations) citations = data.citations;
+                if (typeof data.caseBriefReady === 'boolean') caseBriefReady = data.caseBriefReady;
+              } catch {}
+            }
+          }
+        }
+      } else {
+        const data = await response.json();
+        assistantText = data.reply;
+        citations = data.citations || [];
+        caseBriefReady = Boolean(data.caseBriefReady);
+      }
+
+      const finalAssistantMessage: ChatMessage = {
+        id: assistantPlaceholderId,
         sender: 'assistant',
-        text: data.reply,
+        text: assistantText,
         timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-        citations: data.citations,
-        caseBriefReady: data.caseBriefReady,
+        citations,
+        caseBriefReady,
       };
 
-      const finalMessages = [...currentHistory, {
-        id: createChatMessageId('user'),
-        sender: 'user' as const,
-        text: userMsgText,
-        timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-      }, assistantMessage];
-
-      updateCurrentSessionMessages(finalMessages);
+      const finalHistory = [...currentWithUser, finalAssistantMessage];
+      updateCurrentSessionMessages(finalHistory);
     } catch (err) {
       console.error(err);
       addToast({
@@ -311,55 +364,15 @@ export default function LegalAIChatPage() {
     }
   };
 
+  const sendQuery = async (userMsgText: string, currentHistory: ChatMessage[]) => {
+    await executeStreamingQuery(userMsgText, currentHistory);
+  };
+
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || inputText).trim();
     if (!text || isLoading) return;
-
-    const userMessage: ChatMessage = {
-      id: createChatMessageId('user'),
-      sender: 'user',
-      text,
-      timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    const newHistory = [...messages, userMessage];
-    updateCurrentSessionMessages(newHistory);
     if (!textToSend) setInputText('');
-
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          history: messages.map((m) => ({ sender: m.sender, text: m.text })),
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to get response');
-      const data = await response.json();
-
-      const assistantMessage: ChatMessage = {
-        id: createChatMessageId('assistant'),
-        sender: 'assistant',
-        text: data.reply,
-        timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-        citations: data.citations,
-        caseBriefReady: data.caseBriefReady,
-      };
-
-      updateCurrentSessionMessages([...newHistory, assistantMessage]);
-    } catch (err) {
-      console.error(err);
-      addToast({
-        type: 'error',
-        title: 'خطأ في الاتصال',
-        message: 'تعذر الاتصال بالمستشار القانوني، يرجى إعادة المحاولة.',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    await executeStreamingQuery(text, messages);
   };
 
   // Undo changes up to a specific point
@@ -670,7 +683,8 @@ export default function LegalAIChatPage() {
                     >
                       <div className="whitespace-pre-line leading-relaxed space-y-2 text-xs sm:text-sm">
                         {msg.text.split('\n').map((paragraph, pIdx) => {
-                          const parts = paragraph.split(/(\*\*[^*]+\*\*)/g);
+                          const cleanedParagraph = paragraph.replace(/^#+\s*/, '');
+                          const parts = cleanedParagraph.split(/(\*\*[^*]+\*\*)/g);
                           return (
                             <p key={pIdx} className="leading-relaxed">
                               {parts.map((part, partIdx) => {

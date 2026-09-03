@@ -115,8 +115,18 @@ function mapDbCaseToCaseIntake(dbCase: Record<string, unknown>): CaseIntake {
   };
 }
 
+const LOCAL_STORAGE_ROLE_KEY = 'hakmdar_active_role_v1';
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [role, setRoleState] = useState<UserRole>('client');
+  const [role, setRoleState] = useState<UserRole>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedRole = localStorage.getItem(LOCAL_STORAGE_ROLE_KEY) as UserRole;
+        if (savedRole === 'lawyer' || savedRole === 'client') return savedRole;
+      } catch {}
+    }
+    return 'client';
+  });
   const [lang, setLangState] = useState<'ar' | 'en'>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -206,7 +216,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       if (session?.user) {
         const meta = session.user.user_metadata || {};
-        const resolvedRole = (meta.role as UserRole) || 'client';
+        let savedRole: UserRole | null = null;
+        if (typeof window !== 'undefined') {
+          try {
+            savedRole = localStorage.getItem(LOCAL_STORAGE_ROLE_KEY) as UserRole;
+          } catch {}
+        }
+        const resolvedRole = (savedRole === 'lawyer' || savedRole === 'client') 
+          ? savedRole 
+          : ((meta.role as UserRole) || 'client');
+
         setRoleState(resolvedRole);
         setUser({
           id: session.user.id,
@@ -231,7 +250,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         const meta = session.user.user_metadata || {};
-        const resolvedRole = (meta.role as UserRole) || 'client';
+        let savedRole: UserRole | null = null;
+        if (typeof window !== 'undefined') {
+          try {
+            savedRole = localStorage.getItem(LOCAL_STORAGE_ROLE_KEY) as UserRole;
+          } catch {}
+        }
+        const resolvedRole = (savedRole === 'lawyer' || savedRole === 'client') 
+          ? savedRole 
+          : ((meta.role as UserRole) || 'client');
+
         setRoleState(resolvedRole);
         setUser({
           id: session.user.id,
@@ -258,6 +286,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const setRole = (newRole: UserRole) => {
     setRoleState(newRole);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(LOCAL_STORAGE_ROLE_KEY, newRole);
+      } catch {}
+    }
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         setUser(newRole === 'lawyer' ? DEFAULT_LAWYER_USER : DEFAULT_CLIENT_USER);

@@ -34,8 +34,10 @@ export const baseRegisterSchema = z.object({
     .email('صيغة البريد الإلكتروني غير صحيحة'),
   phone: z
     .string()
-    .min(10, 'رقم الهاتف يجب ألا يقل عن 10 أرقام')
-    .regex(phoneRegex, 'يرجى إدخال رقم هاتف صحيح (مثال: 01012345678 أو +20...)'),
+    .optional()
+    .refine((val) => !val || phoneRegex.test(val), {
+      message: 'يرجى إدخال رقم هاتف صحيح (مثال: 01012345678 أو +20...)',
+    }),
   password: z
     .string()
     .min(6, 'كلمة المرور يجب ألا تقل عن 6 أحرف')
@@ -45,7 +47,7 @@ export const baseRegisterSchema = z.object({
   barNumber: z.string().optional(),
   specialty: z.string().optional(),
   agreeTerms: z.literal(true, {
-    message: 'يجب الموافقة على شروط الاستخدام وسياسة الخصوصية',
+    message: 'يجب الموافقة على شروط الاستخدام وميثاق سرية البيانات القضائية',
   }),
 });
 
@@ -67,7 +69,7 @@ export const registerSchema = baseRegisterSchema.superRefine((data, ctx) => {
 export interface RegisterFormData {
   fullName: string;
   email: string;
-  phone: string;
+  phone?: string;
   password: string;
   location: string;
   role: 'client' | 'lawyer';

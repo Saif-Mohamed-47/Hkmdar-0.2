@@ -1,0 +1,770 @@
+import asyncio
+import os
+from playwright.async_api import async_playwright
+
+HTML_TEMPLATE = """<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>مشروع تخرج منصة حكمدار HAKMDAR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=Tajawal:wght@400;500;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+            background-color: #060a14;
+            color: #f1f5f9;
+            line-height: 1.6;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 22mm 20mm;
+            page-break-after: always;
+            position: relative;
+            background: radial-gradient(circle at 80% 20%, #111c38 0%, #060a14 70%);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page:last-child {
+            page-break-after: avoid;
+        }
+
+        /* Watermark & Borders */
+        .page-border {
+            position: absolute;
+            top: 10mm;
+            bottom: 10mm;
+            left: 10mm;
+            right: 10mm;
+            border: 1px solid rgba(197, 160, 89, 0.2);
+            border-radius: 12px;
+            pointer-events: none;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(197, 160, 89, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+
+        .header-brand {
+            font-size: 16px;
+            font-weight: 800;
+            color: #dfba73;
+            letter-spacing: -0.5px;
+        }
+
+        .header-meta {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .footer-bar {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        /* Typography & Components */
+        h1, h2, h3, h4 {
+            color: #ffffff;
+            font-weight: 800;
+        }
+
+        .gold-text {
+            color: #dfba73;
+        }
+
+        .gradient-title {
+            background: linear-gradient(135deg, #dfba73 0%, #ffffff 70%, #dfba73 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(197, 160, 89, 0.25);
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-gold {
+            background: rgba(223, 186, 115, 0.08);
+            border: 1px solid rgba(197, 160, 89, 0.4);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(197, 160, 89, 0.15);
+            color: #dfba73;
+            border: 1px solid rgba(197, 160, 89, 0.35);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .screenshot-box {
+            border: 1px solid rgba(197, 160, 89, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            margin: 10px 0;
+            background: #020617;
+        }
+
+        .screenshot-box img {
+            width: 100%;
+            display: block;
+            object-fit: cover;
+        }
+
+        .screenshot-caption {
+            padding: 6px 10px;
+            background: #0b1224;
+            font-size: 10.5px;
+            color: #cbd5e1;
+            font-weight: 600;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+        }
+
+        /* Table */
+        table.plan-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-top: 8px;
+        }
+
+        table.plan-table th {
+            background: #111c38;
+            color: #dfba73;
+            padding: 9px 12px;
+            text-align: right;
+            border-bottom: 2px solid #c5a059;
+            font-weight: 700;
+        }
+
+        table.plan-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            color: #e2e8f0;
+        }
+
+        table.plan-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Specific Cover Elements */
+        .cover-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            padding: 30mm 20mm;
+            background: radial-gradient(circle at 50% 30%, #1e293b 0%, #060a14 75%);
+        }
+
+        .cover-logo-wrapper {
+            width: 120px;
+            height: 120px;
+            border-radius: 30px;
+            background: linear-gradient(135deg, rgba(223, 186, 115, 0.2) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border: 2px solid #dfba73;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 50px rgba(197, 160, 89, 0.35);
+            margin-bottom: 25px;
+        }
+
+        .cover-logo-wrapper img {
+            width: 85px;
+            height: 85px;
+            object-fit: contain;
+        }
+
+        .cover-title {
+            font-size: 38px;
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .cover-subtitle {
+            font-size: 17px;
+            color: #94a3b8;
+            max-width: 580px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .meta-pill {
+            display: flex;
+            gap: 20px;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 14px 28px;
+            border-radius: 50px;
+            border: 1px solid rgba(197, 160, 89, 0.4);
+            margin-bottom: 30px;
+        }
+
+        .meta-item {
+            text-align: center;
+        }
+
+        .meta-item .label {
+            font-size: 10px;
+            color: #94a3b8;
+            display: block;
+        }
+
+        .meta-item .value {
+            font-size: 13px;
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .check-icon {
+            color: #dfba73;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== الغلاف الرسمي للمشروع ==================== -->
+    <div class="page cover-page">
+        <div class="page-border"></div>
+
+        <div>
+            <div style="font-size: 14px; font-weight: 700; color: #94a3b8; letter-spacing: 1px; margin-bottom: 5px;">
+                جمهورية مصر العربية · وزارة التعليم العالي والبحث العلمي
+            </div>
+            <div style="font-size: 13px; color: #dfba73; font-weight: 600;">
+                مقترح مشروع التخرج النهائي (Graduation Project Proposal & Architecture)
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <div class="cover-logo-wrapper">
+                <img src="file:///c:/project/Hakmdar/HAKMDAR/public/hakmdar-sword-icon.png" alt="شعار حكمدار">
+            </div>
+
+            <div class="badge" style="font-size: 13px; padding: 6px 16px; margin-bottom: 12px;">
+                🏛️ قطاع تكنولوجيا المعلومات والذكاء الاصطناعي القانوني (LegalTech)
+            </div>
+
+            <h1 class="cover-title gradient-title">
+                مـنـظـومـة حِـكِـمْـدار
+            </h1>
+            <div style="font-size: 20px; font-weight: 700; color: #dfba73; margin-bottom: 12px;">
+                HAKMDAR · Sovereign AI-Powered Legal Operating System
+            </div>
+            <p class="cover-subtitle">
+                المنظومة الرقمية الشاملة لإدارة ملفات المحاماة والاستشارات القانونية التوليدية وتكييف الدعاوى القضائية وفقاً للتشريعات المصرية وأحكام محكمة النقض.
+            </p>
+
+            <div class="meta-pill">
+                <div class="meta-item">
+                    <span class="label">طبيعة المشروع</span>
+                    <span class="value">منصة برمجية متكاملة SaaS</span>
+                </div>
+                <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
+                <div class="meta-item">
+                    <span class="label">النموذج الذكي المستخدم</span>
+                    <span class="value">Google Gemini 1.5 Pro + RAG</span>
+                </div>
+                <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
+                <div class="meta-item">
+                    <span class="label">الحالة الفنية</span>
+                    <span class="value" style="color: #34d399;">تم إنجاز النظام بالكامل 100%</span>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div style="font-size: 12px; color: #cbd5e1; font-weight: 600;">
+                إعداد الطالب: <strong style="color: #ffffff; font-size: 14px;">سيف محمد (Saif Mohamed)</strong>
+            </div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
+                العام الأكاديمي 2026 / 2027 · وثيقة الاعتماد والمناقشة
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==================== الصفحة 1: الملخص التنفيذي وأهمية المشروع ==================== -->
+    <div class="page">
+        <div class="page-border"></div>
+        <div class="header-bar">
+            <div class="header-logo">
+                <img src="file:///c:/project/Hakmdar/HAKMDAR/public/hakmdar-sword-icon.png">
+                <span class="header-brand">حِكِمْدار HAKMDAR</span>
+            </div>
+            <div class="header-meta">المقدمة والملخص التنفيذي · صفحة 1</div>
+        </div>
+
+        <div style="margin-bottom: 18px;">
+            <span class="badge">1. ملخص المشروع ومبررات الاختيار</span>
+            <h2 style="font-size: 22px; margin-top: 6px;" class="gradient-title">
+                لماذا يمثل "حكمدار" مشروع تخرج استثنائي ورائد؟
+            </h2>
+        </div>
+
+        <div class="card card-gold">
+            <h3 style="font-size: 13px; color: #dfba73; margin-bottom: 6px;">💡 فكرة المشروع الجوهرية:</h3>
+            <p style="font-size: 12px; color: #e2e8f0; line-height: 1.7;">
+                مشروع <strong>حِكِمْدار</strong> هو أول منصة حوسبة قانونية ذكية متخصصة في <strong>القانون المصري</strong>. يهدف المشروع إلى رقمنة وأتمتة منظومة العمل القضائي والاستشارات بين الموكل ومكاتب المحاماة، وتوظيف أحدث تقنيات نماذج اللغات الكبيرة (LLMs) لتقديم تكييف قانوني دقيق، بحث فوري في 20 تخصصاً تشريعياً، وتوليد صحف الدعاوى والمذكرات بصيغ تنفيذية جاهزة.
+            </p>
+        </div>
+
+        <div class="grid-2" style="margin-bottom: 14px;">
+            <div class="card">
+                <h3 style="font-size: 13px; color: #ef4444; margin-bottom: 8px;">❌ المشكلات الواقعية في السوق (Problem Statement):</h3>
+                <div class="check-item"><span class="check-icon" style="color: #ef4444;">•</span> صعوبة وصول المواطن لاستشارة قانونية أولية موثوقة ومبنية على نصوص مواد القانون.</div>
+                <div class="check-item"><span class="check-icon" style="color: #ef4444;">•</span> استنزاف وقت المحامين في صياغة العرائض الروتينية وحساب الرسوم والمستحقات يدوياً.</div>
+                <div class="check-item"><span class="check-icon" style="color: #ef4444;">•</span> تشتت سوابق محكمة النقض والمواد التشريعية بين المراجع الورقية وصعوبة البحث السريع.</div>
+                <div class="check-item"><span class="check-icon" style="color: #ef4444;">•</span> غياب منصة موحدة لإدارة حافظة مستندات القضايا (PDF/Word/Excel) وتتبع الجلسات.</div>
+            </div>
+
+            <div class="card">
+                <h3 style="font-size: 13px; color: #34d399; margin-bottom: 8px;">✅ الحلول المبتكرة في حكمدار (Our Solution):</h3>
+                <div class="check-item"><span class="check-icon" style="color: #34d399;">✓</span> مستشار ذكاء اصطناعي (Gemini 1.5 Pro) يستوعب العامية المصرية ويستخرج ملف قضية رسمي.</div>
+                <div class="check-item"><span class="check-icon" style="color: #34d399;">✓</span> محرك صياغة مذكرات وصحف دعاوى مؤصلة بالمواد ونصوص النقض بضغطة زر.</div>
+                <div class="check-item"><span class="check-icon" style="color: #34d399;">✓</span> قاعدة بيانات تشريعية تضم 20 تخصصاً قانونياً ومحافظات مصر الـ 27 مع بحث صوتي ونصي متسامح.</div>
+                <div class="check-item"><span class="check-icon" style="color: #34d399;">✓</span> نظام حافظة مستندات يدعم PDF, Word, Excel مع تخزين سحابي آمن وتتبع الجلسات.</div>
+            </div>
+        </div>
+
+        <div class="card" style="padding: 12px 16px;">
+            <h3 style="font-size: 12px; color: #dfba73; margin-bottom: 6px;">🎯 الأهداف الأكاديمية والتطبيقية للمشروع:</h3>
+            <div class="grid-3" style="font-size: 11px;">
+                <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+                    <strong style="color: #ffffff; display: block; margin-bottom: 3px;">1. تطبيق الذكاء الاصطناعي</strong>
+                    بناء Prompt Engineering و Retrieval Engine متقدم ومتوافق مع القوانين المحلية.
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+                    <strong style="color: #ffffff; display: block; margin-bottom: 3px;">2. بنية برمجية حديثة</strong>
+                    تطبيق معايير Full-Stack الحديثة عبر Next.js 15 و Supabase و Tailwind CSS.
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+                    <strong style="color: #ffffff; display: block; margin-bottom: 3px;">3. منتج جاهز للسوق</strong>
+                    تصميم تجربة مستخدم (UX/UI) فائقة الفخامة تخدم الموكلين ونقابة المحامين فعلياً.
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bar">
+            <span>منصة حكمدار HAKMDAR · نظام التشغيل القانوني الذكي</span>
+            <span>وثيقة مقترح مشروع التخرج</span>
+        </div>
+    </div>
+
+
+    <!-- ==================== الصفحة 2: البنية المعمارية والتقنيات ==================== -->
+    <div class="page">
+        <div class="page-border"></div>
+        <div class="header-bar">
+            <div class="header-logo">
+                <img src="file:///c:/project/Hakmdar/HAKMDAR/public/hakmdar-sword-icon.png">
+                <span class="header-brand">حِكِمْدار HAKMDAR</span>
+            </div>
+            <div class="header-meta">المعمارية الفنية والتقنيات · صفحة 2</div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <span class="badge">2. المعمارية الفنية وحزمة التكنولوجيا (System Architecture & Tech Stack)</span>
+            <h2 style="font-size: 20px; margin-top: 6px;" class="gradient-title">
+                البنية الهندسية وتدفق البيانات الفائق السرعة
+            </h2>
+        </div>
+
+        <div class="grid-4" style="margin-bottom: 14px;">
+            <div class="card" style="text-align: center; padding: 12px 8px;">
+                <div style="font-size: 18px; margin-bottom: 4px;">⚡</div>
+                <strong style="font-size: 12px; color: #dfba73; display: block;">Next.js 15 (App Router)</strong>
+                <span style="font-size: 10px; color: #94a3b8;">React 19 Server & Client Architecture</span>
+            </div>
+            <div class="card" style="text-align: center; padding: 12px 8px;">
+                <div style="font-size: 18px; margin-bottom: 4px;">🧠</div>
+                <strong style="font-size: 12px; color: #dfba73; display: block;">Google Gemini 1.5 Pro</strong>
+                <span style="font-size: 10px; color: #94a3b8;">Streaming AI Engine with Egyptian RAG</span>
+            </div>
+            <div class="card" style="text-align: center; padding: 12px 8px;">
+                <div style="font-size: 18px; margin-bottom: 4px;">🗄️</div>
+                <strong style="font-size: 12px; color: #dfba73; display: block;">Supabase (PostgreSQL)</strong>
+                <span style="font-size: 10px; color: #94a3b8;">Auth, RLS Policies & Cloud Storage</span>
+            </div>
+            <div class="card" style="text-align: center; padding: 12px 8px;">
+                <div style="font-size: 18px; margin-bottom: 4px;">🎨</div>
+                <strong style="font-size: 12px; color: #dfba73; display: block;">Tailwind + Dark Luxe</strong>
+                <span style="font-size: 10px; color: #94a3b8;">Glassmorphism & Gold Royal Palette</span>
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 14px;">
+            <h3 style="font-size: 12px; color: #dfba73; margin-bottom: 10px;">📊 مخطط تدفق العمليات الذكية (AI Processing Flow):</h3>
+            <div style="background: #080e1c; border: 1px solid rgba(197, 160, 89, 0.2); border-radius: 10px; padding: 12px; font-size: 11px; line-height: 1.8;">
+                <div style="color: #38bdf8;">1. إدخال الموكل / المحامي ➔ استيعاب الواقعة بالعامية أو الفصحى عبر واجهة المحادثة التفاعلية.</div>
+                <div style="color: #a78bfa;">2. طبقة التطهير اللغوي ➔ تطبيع الحروف العربية (Normalize Alef/Taa) واستخراج المصطلحات الجنائية والمدنية.</div>
+                <div style="color: #fbbf24;">3. محرك RAG السيادي ➔ مطابقة الواقعة مع مواد القوانين المصرية (المدني، العقوبات، العمل، الجرائم الإلكترونية، الشركات).</div>
+                <div style="color: #34d399;">4. التوليد اللحظي عبر Gemini Pro ➔ صياغة التكييف القانوني، خطة الدفاع، واستخراج ملف القضية التنفيذي (Case Dossier).</div>
+                <div style="color: #f43f5e;">5. إسناد القضية وتتبعها ➔ إرسال الملف لمحامي النقض المختص وتخزين المستندات (PDF/Excel) في قاعدة البيانات.</div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 0;">
+            <h3 style="font-size: 12px; color: #dfba73; margin-bottom: 8px;">🔒 معايير الأمان والخصوصية القضائية (Security & Privacy):</h3>
+            <div class="grid-3" style="font-size: 11px;">
+                <div>
+                    <strong style="color: #ffffff; display: block;">• عزل البيانات (Row Level Security):</strong>
+                    صلاحيات صارمة تمنع وصول أي مستخدم لملفات قضايا ومستندات المحامين الآخرين.
+                </div>
+                <div>
+                    <strong style="color: #ffffff; display: block;">• حماية الأسرار المهنية:</strong>
+                    تشفير كامل لكافة محادثات الاستشارة ومذكرات الدفاع المرفوعة.
+                </div>
+                <div>
+                    <strong style="color: #ffffff; display: block;">• اعتماد هوية المحامين:</strong>
+                    ربط حسابات المحامين بأرقام القيد بنقابة المحامين المصرية (Bar Number).
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bar">
+            <span>منصة حكمدار HAKMDAR · نظام التشغيل القانوني الذكي</span>
+            <span>وثيقة مقترح مشروع التخرج</span>
+        </div>
+    </div>
+
+
+    <!-- ==================== الصفحة 3: شاشات النظام الحية (بوابة الموكل) ==================== -->
+    <div class="page">
+        <div class="page-border"></div>
+        <div class="header-bar">
+            <div class="header-logo">
+                <img src="file:///c:/project/Hakmdar/HAKMDAR/public/hakmdar-sword-icon.png">
+                <span class="header-brand">حِكِمْدار HAKMDAR</span>
+            </div>
+            <div class="header-meta">شاشات النظام الفعلية (بوابة الموكل) · صفحة 3</div>
+        </div>
+
+        <div style="margin-bottom: 12px;">
+            <span class="badge">3. استعراض واجهات بوابة الموكل والاستشارة الذكية</span>
+            <h2 style="font-size: 18px; margin-top: 4px;" class="gradient-title">
+                تجربة تفاعلية سلسة وموثقة للمواطن والموكل
+            </h2>
+        </div>
+
+        <div class="grid-2">
+            <div>
+                <div class="screenshot-box">
+                    <img src="file:///c:/project/Hakmdar/HAKMDAR/public/doc_screenshots/01_landing.png" alt="الرئيسية">
+                    <div class="screenshot-caption">الشاشة الرئيسية: بوابة الدخول واختيار الخدمات القضائية</div>
+                </div>
+                <div style="font-size: 11px; color: #cbd5e1; padding: 0 4px;">
+                    <strong>مميزات الشاشة:</strong> توجيه ذكي للمستخدمين، استعراض إحصائيات المنصة، والوصول الفوري لبوابتي الموكل والمحامي.
+                </div>
+            </div>
+
+            <div>
+                <div class="screenshot-box">
+                    <img src="file:///c:/project/Hakmdar/HAKMDAR/public/doc_screenshots/02_ai_chat.png" alt="المستشار الذكي">
+                    <div class="screenshot-caption">المستشار القانوني التوليدي: تحليل فوري واستخراج ملف القضية</div>
+                </div>
+                <div style="font-size: 11px; color: #cbd5e1; padding: 0 4px;">
+                    <strong>مميزات الشاشة:</strong> معالجة اللغة العربية واللهجة المصرية، تأصيل السوابق، واستخراج Case Intake تلقائي.
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 10px;">
+            <div>
+                <div class="screenshot-box">
+                    <img src="file:///c:/project/Hakmdar/HAKMDAR/public/doc_screenshots/03_legal_research.png" alt="البحث التشريعي">
+                    <div class="screenshot-caption">محرك البحث في القوانين: 20 تخصصاً وأحكام محكمة النقض</div>
+                </div>
+                <div style="font-size: 11px; color: #cbd5e1; padding: 0 4px;">
+                    <strong>مميزات الشاشة:</strong> بحث ذكي متسامح مع الأخطاء الإملائية، تصنيف المواد، مع إمكانية القراءة الصوتية.
+                </div>
+            </div>
+
+            <div>
+                <div class="screenshot-box">
+                    <img src="file:///c:/project/Hakmdar/HAKMDAR/public/doc_screenshots/04_lawyers.png" alt="دليل المحامين">
+                    <div class="screenshot-caption">دليل المحامين المعتمدين: فلترة ذكية في 27 محافظة مصرية</div>
+                </div>
+                <div style="font-size: 11px; color: #cbd5e1; padding: 0 4px;">
+                    <strong>مميزات الشاشة:</strong> تحديد متعدد (Multi-Select)، مطابقة التخصص الجغرافي، وإرسال ملف القضية بنقرة واحدة.
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bar">
+            <span>منصة حكمدار HAKMDAR · نظام التشغيل القانوني الذكي</span>
+            <span>وثيقة مقترح مشروع التخرج</span>
+        </div>
+    </div>
+
+
+    <!-- ==================== الصفحة 4: شاشات النظام الحية (بوابة المحامي وحافظة المستندات) ==================== -->
+    <div class="page">
+        <div class="page-border"></div>
+        <div class="header-bar">
+            <div class="header-logo">
+                <img src="file:///c:/project/Hakmdar/HAKMDAR/public/hakmdar-sword-icon.png">
+                <span class="header-brand">حِكِمْدار HAKMDAR</span>
+            </div>
+            <div class="header-meta">شاشات النظام الفعلية (بوابة المحامي) · صفحة 4</div>
+        </div>
+
+        <div style="margin-bottom: 12px;">
+            <span class="badge">4. استعراض واجهات مكتب المحامي وإدارة الدعاوى</span>
+            <h2 style="font-size: 18px; margin-top: 4px;" class="gradient-title">
+                منظومة عمل متكاملة لمكاتب السادة المحامين
+            </h2>
+        </div>
+
+        <div class="grid-2">
+            <div>
+                <div class="screenshot-box">
+                    <img src="file:///c:/project/Hakmdar/HAKMDAR/public/doc_screenshots/05_lawyer_dashboard.png" alt="لوحة تحكم المحامي">
+                    <div class="screenshot-caption">لوحة تحكم المحامي: مؤشرات القضايا والطلبات الواردة والجلسات</div>
+                </div>
+                <div style="font-size: 11px; color: #cbd5e1; padding: 0 4px;">
+                    <strong>مميزات الشاشة:</strong> إحصائيات القضايا، إدارة المواعيد، تنبيهات الجلسات، ونظرة شاملة على نشاط المكتب.
+                </div>
+            </div>
+
+            <div>
+                <div class="screenshot-box">
+                    <img src="file:///c:/project/Hakmdar/HAKMDAR/public/doc_screenshots/06_lawyer_cases.png" alt="سجل ملفات القضايا">
+                    <div class="screenshot-caption">سجل القضايا ورفع المستندات (PDF / Word / Excel)</div>
+                </div>
+                <div style="font-size: 11px; color: #cbd5e1; padding: 0 4px;">
+                    <strong>مميزات الشاشة:</strong> إضافة القضايا، إرفاق عرائض الدعاوى وكشوف الحسابات، وتحديث مراحل التقاضي.
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 12px;">
+            <div class="grid-2" style="align-items: center;">
+                <div>
+                    <div class="screenshot-box" style="margin: 0;">
+                        <img src="file:///c:/project/Hakmdar/HAKMDAR/public/doc_screenshots/07_ai_drafting.png" alt="الصياغة القضائية">
+                        <div class="screenshot-caption">الصياغة القضائية الآلية (AI Legal Drafting Studio)</div>
+                    </div>
+                </div>
+                <div style="font-size: 11px; color: #cbd5e1; padding: 0 6px;">
+                    <h4 style="color: #dfba73; font-size: 12px; margin-bottom: 4px;">⚖️ محرر الصياغة القانونية المؤصلة:</h4>
+                    <p style="margin-bottom: 6px; line-height: 1.6;">
+                        يتيح للمحامي توليد صحف الدعاوى والمذكرات القضائية وعقود العمل والاتفاقيات التجارية طبقاً للأعراف القانونية المصرية مع إمكانية التعديل والطباعة المباشرة.
+                    </p>
+                    <div class="badge" style="font-size: 10px;">يدعم التصدير الفوري والطباعة الرسمية</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bar">
+            <span>منصة حكمدار HAKMDAR · نظام التشغيل القانوني الذكي</span>
+            <span>وثيقة مقترح مشروع التخرج</span>
+        </div>
+    </div>
+
+
+    <!-- ==================== الصفحة 5: خطة التطوير وجدول مشروع التخرج ==================== -->
+    <div class="page">
+        <div class="page-border"></div>
+        <div class="header-bar">
+            <div class="header-logo">
+                <img src="file:///c:/project/Hakmdar/HAKMDAR/public/hakmdar-sword-icon.png">
+                <span class="header-brand">حِكِمْدار HAKMDAR</span>
+            </div>
+            <div class="header-meta">خطة العمل وجدول مشروع التخرج · صفحة 5</div>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+            <span class="badge">5. الخطة الزمنية ومراحل المشروع (Graduation Project Roadmap)</span>
+            <h2 style="font-size: 20px; margin-top: 4px;" class="gradient-title">
+                مراحل الإنجاز والتسليم النهائي للمشروع
+            </h2>
+        </div>
+
+        <div class="card card-gold" style="margin-bottom: 12px;">
+            <strong style="color: #dfba73; font-size: 12px; display: block; margin-bottom: 4px;">🚀 موقف الإنجاز الحالي (Current Status):</strong>
+            <p style="font-size: 11.5px; color: #e2e8f0; line-height: 1.6;">
+                تم بناء <strong>النواة البرمجية والمنظومة التشغيلية الكاملة (Core Architecture & UI Engine)</strong> واختبار الذكاء الاصطناعي مع نماذج Gemini 1.5 Pro وتجهيز قاعدة البيانات التشريعية بالكامل، والمشروع جاهز حالياً للعرض والمناقشة الأولية للاعتماد.
+            </p>
+        </div>
+
+        <table class="plan-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">المرحلة</th>
+                    <th style="width: 35%;">المهام والمخرجات الفنية</th>
+                    <th style="width: 25%;">التقنيات المستخدمة</th>
+                    <th style="width: 25%;">نسبة الإنجاز</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>المرحلة 1: التحليل والتصميم</strong></td>
+                    <td>دراسة احتياجات السوق القانوني، هندسة متطلبات النظام، وتصميم هوية "حكمدار" وواجهات الـ UI/UX.</td>
+                    <td>Figma · Design Tokens · Dark Luxe</td>
+                    <td><span style="color: #34d399; font-weight: bold;">100% (مكتملة)</span></td>
+                </tr>
+                <tr>
+                    <td><strong>المرحلة 2: الواجهات والـ Frontend</strong></td>
+                    <td>بناء بوابتي الموكل والمحامي، محرك البحث الذكي في 27 محافظة و 20 تخصصاً، والتطبيع اللغوي للعامية.</td>
+                    <td>Next.js 15 · Tailwind · Lucide</td>
+                    <td><span style="color: #34d399; font-weight: bold;">100% (مكتملة)</span></td>
+                </tr>
+                <tr>
+                    <td><strong>المرحلة 3: دمج الذكاء الاصطناعي</strong></td>
+                    <td>تكامل Gemini 1.5 Pro Streaming API، بناء RAG للمواد المصرية، ومولد المذكرات القضائية الآلي.</td>
+                    <td>Google AI SDK · Prompt Tuning</td>
+                    <td><span style="color: #34d399; font-weight: bold;">100% (مكتملة)</span></td>
+                </tr>
+                <tr>
+                    <td><strong>المرحلة 4: قواعد البيانات والملفات</strong></td>
+                    <td>إدارة القضايا، مزامنة الجلسات، ونظام حافظة المستندات والمرفقات (PDF / Word / Excel).</td>
+                    <td>Supabase PostgreSQL · Storage</td>
+                    <td><span style="color: #34d399; font-weight: bold;">100% (مكتملة)</span></td>
+                </tr>
+                <tr>
+                    <td><strong>المرحلة 5: التوثيق والاختبارات</strong></td>
+                    <td>إعداد وثيقة التخرج، اختبارات الأداء وسرعة الاستجابة، وتجهيز سيناريو العرض النهائي (Demo Day).</td>
+                    <td>Playwright · CI/CD · Documentation</td>
+                    <td><span style="color: #60a5fa; font-weight: bold;">قيد التسليم والاعتماد</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card" style="margin-top: 14px; margin-bottom: 0;">
+            <h3 style="font-size: 12px; color: #dfba73; margin-bottom: 6px;">🌟 الإضافات المستقبلية المقترحة لمرحلة المناقشة (Future Roadmap):</h3>
+            <div class="grid-3" style="font-size: 11px;">
+                <div>
+                    <strong style="color: #ffffff; display: block;">1. تطبيق الموبايل (React Native):</strong>
+                    إتاحة إشعارات فورية للجلسات وتنبيهات القضايا على هواتف المحامين والموكلين.
+                </div>
+                <div>
+                    <strong style="color: #ffffff; display: block;">2. التوقيع الرقمي (Digital Signature):</strong>
+                    توقيع التوكيلات والمستندات القضائية إلكترونياً بأعلى معايير الأمان.
+                </div>
+                <div>
+                    <strong style="color: #ffffff; display: block;">3. بوابات الدفع الإلكتروني:</strong>
+                    دعم سداد أتعاب الاستشارات عبر فوري والبطاقات البنكية المصرية.
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bar">
+            <span>منصة حكمدار HAKMDAR · نظام التشغيل القانوني الذكي</span>
+            <span>وثيقة مقترح مشروع التخرج</span>
+        </div>
+    </div>
+
+</body>
+</html>
+"""
+
+async def generate_pdf():
+    html_path = 'c:/project/Hakmdar/HAKMDAR/public/hakmdar_graduation_proposal.html'
+    pdf_path = 'c:/project/Hakmdar/HAKMDAR/public/مشروع_تخرج_منصة_حكمدار_HAKMDAR.pdf'
+    
+    with open(html_path, 'w', encoding='utf-8') as f:
+        f.write(HTML_TEMPLATE)
+    
+    print('HTML template generated!')
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        page = await browser.new_page()
+        
+        # Load the HTML file
+        await page.goto(f'file:///{html_path}', wait_until='networkidle')
+        await page.wait_for_timeout(2000)
+        
+        # Print high quality A4 PDF
+        await page.pdf(
+            path=pdf_path,
+            format='A4',
+            print_background=True,
+            margin={'top': '0', 'right': '0', 'bottom': '0', 'left': '0'},
+            prefer_css_page_size=True,
+        )
+        await browser.close()
+        
+    print(f'Successfully generated PDF at: {pdf_path}')
+
+if __name__ == '__main__':
+    asyncio.run(generate_pdf())

@@ -5,17 +5,20 @@ import Link from 'next/link';
 import { useApp } from '@/lib/context/AppContext';
 import { CaseStatus } from '@/lib/types';
 import CaseStatusBadge from '@/components/lawyer/CaseStatusBadge';
+import CreateCaseModal from '@/components/lawyer/CreateCaseModal';
 import { 
   FolderKanban, 
   Search, 
   ChevronLeft, 
-  FileText
+  FileText,
+  Plus
 } from 'lucide-react';
 
 export default function LawyerCasesPage() {
   const { cases } = useApp();
   const [selectedStatus, setSelectedStatus] = useState<CaseStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const filteredCases = cases.filter((c) => {
     const matchesStatus = selectedStatus === 'all' || c.status === selectedStatus;
@@ -48,7 +51,21 @@ export default function LawyerCasesPage() {
             مراجعة الوقائع القانونية والطلبات المقترحة وإدارة مراحل التقاضي والجلسات لكل دعوى.
           </p>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setCreateModalOpen(true)}
+          className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl btn-legal-gold text-xs font-bold shadow-lg hover:shadow-xl transition-all cursor-pointer shrink-0"
+        >
+          <Plus className="w-4 h-4 stroke-[3]" />
+          <span>إضافة قضية جديدة مع المستندات</span>
+        </button>
       </div>
+
+      <CreateCaseModal
+        isOpen={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+      />
 
       {/* Filter Tabs & Search Bar */}
       <div className="p-4 sm:p-6 rounded-3xl legal-card space-y-4 shadow-lg">
@@ -127,12 +144,22 @@ export default function LawyerCasesPage() {
 
       {/* Cases List */}
       {filteredCases.length === 0 ? (
-        <div className="p-12 rounded-3xl legal-card text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] mx-auto flex items-center justify-center text-[var(--text-muted)]">
+        <div className="p-12 rounded-3xl legal-card text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] mx-auto flex items-center justify-center text-[var(--accent-gold)]">
             <FileText className="w-6 h-6" />
           </div>
-          <h3 className="text-sm font-bold text-[var(--text-primary)]">لا توجد ملفات قضايا مطابقة لهذا التصنيف</h3>
-          <p className="text-xs text-[var(--text-secondary)]">يمكنك مراجعة البحث أو اختيار تبويب تصنيف مختلف</p>
+          <div className="space-y-1">
+            <h3 className="text-sm font-bold text-[var(--text-primary)]">لا توجد ملفات قضايا مسجلة حتى الآن</h3>
+            <p className="text-xs text-[var(--text-secondary)]">يمكنك إنشاء أول ملف قضية للمكتب ورفع المستندات (PDF / Word / Excel) مباشرة</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCreateModalOpen(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl btn-legal-gold text-xs font-bold shadow-md cursor-pointer transition-all"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>تسجيل قضية جديدة ورفع المستندات</span>
+          </button>
         </div>
       ) : (
         <div className="space-y-4">

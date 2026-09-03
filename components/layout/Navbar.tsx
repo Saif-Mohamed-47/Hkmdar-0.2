@@ -25,7 +25,7 @@ interface NavLinkItem {
 }
 
 export default function Navbar() {
-  const { role, user, cases, addToast, lang } = useApp();
+  const { role, user, setRole, setUser, cases, addToast, lang } = useApp();
   const t = translations[lang || 'ar'];
   const pathname = usePathname();
   const router = useRouter();
@@ -65,7 +65,8 @@ export default function Navbar() {
     { href: '/lawyer/profile', label: t.nav.lawyerProfile },
   ];
 
-  const currentNavLinks = isLawyer ? lawyerNavLinks : clientNavLinks;
+  const isLawyerRoute = pathname.startsWith('/lawyer');
+  const currentNavLinks = isLawyerRoute ? lawyerNavLinks : clientNavLinks;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/95 backdrop-blur-md transition-colors duration-200">
@@ -81,8 +82,8 @@ export default function Navbar() {
               <span className="font-extrabold text-lg tracking-tight text-[var(--text-primary)] block leading-none">
                 {t.brand.name}
               </span>
-              <span className="text-[10px] text-[var(--accent-gold)] font-medium">
-                {isLawyer ? t.brand.lawyerPortal : t.brand.clientPortal}
+              <span className="text-[10px] text-[var(--accent-gold)] font-medium" suppressHydrationWarning>
+                {isLawyerRoute ? t.brand.lawyerPortal : t.brand.clientPortal}
               </span>
             </div>
           </Link>
@@ -122,16 +123,35 @@ export default function Navbar() {
           {/* Global Theme Toggle */}
           <ThemeToggle />
 
-          {/* Active Locked Role Badge (No Manual Role Switching) */}
-          <div
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/30 text-xs text-[var(--text-primary)] select-none"
-            title={isLawyer ? 'حساب محامٍ ممارس مقيد' : 'حساب موكل مقيد'}
+          {/* Quick Role Switcher (Client <-> Lawyer) */}
+          <button
+            type="button"
+            suppressHydrationWarning
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const targetRole = isLawyerRoute ? 'client' : 'lawyer';
+              try {
+                localStorage.setItem('hakmdar_active_role_v1', targetRole);
+              } catch {}
+              setRole(targetRole);
+              setUser({
+                ...user,
+                role: targetRole,
+                name: targetRole === 'lawyer' ? 'المستشار / سيف محمد' : 'سيف محمد (موكل)',
+                barNumber: targetRole === 'lawyer' ? 'EG-BAR-89421' : undefined,
+                specialty: targetRole === 'lawyer' ? 'criminal' : undefined,
+              });
+              window.location.replace(targetRole === 'lawyer' ? '/lawyer/dashboard' : '/client/dashboard');
+            }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--accent-gold)]/40 hover:border-[var(--accent-gold)] hover:bg-[var(--bg-surface-hover)] text-xs text-[var(--text-primary)] transition-all cursor-pointer shadow-sm"
+            title="اضغط هنا للتبديل الفوري بين بوابة المحامي وبوابة الموكل"
           >
-            <span className="w-2 h-2 rounded-full bg-[var(--accent-gold)]" />
-            <span className="font-medium text-xs">
-              {isLawyer ? (lang === 'en' ? 'Lawyer Account' : 'حساب محامٍ') : (lang === 'en' ? 'Client Account' : 'حساب موكل')}
+            <span className={`w-2 h-2 rounded-full ${isLawyerRoute ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
+            <span className="font-bold text-xs" suppressHydrationWarning>
+              {isLawyerRoute ? '⚖️ بوابة المحامي (تبديل لموكل)' : '👤 بوابة الموكل (تبديل لمحامٍ)'}
             </span>
-          </div>
+          </button>
 
           {/* Notifications Popover */}
           <div className="relative">
@@ -162,7 +182,7 @@ export default function Navbar() {
                         className="p-2.5 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] space-y-1"
                       >
                         <p className="text-xs font-semibold text-[var(--text-primary)]">{c.title}</p>
-                        <p className="text-[10px] text-[var(--text-secondary)] truncate">{c.description}</p>
+                        <p className="text-[10px] text-[var(--text-secondary)] truncate">{c.executiveSummary}</p>
                       </div>
                     ))
                   ) : (

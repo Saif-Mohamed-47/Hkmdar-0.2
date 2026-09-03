@@ -258,6 +258,36 @@ export default function LawyerAIDraftingPage() {
                       </>
                     )}
                   </button>
+
+                  <button
+                    onClick={() => {
+                      const printWindow = window.open('', '_blank');
+                      if (printWindow) {
+                        printWindow.document.write(`
+                          <html dir="rtl" lang="ar">
+                            <head>
+                              <title>${selectedTemplate.title}</title>
+                              <style>
+                                body { font-family: 'Amiri', 'Times New Roman', serif; padding: 40px; font-size: 16px; line-height: 2; color: #000; }
+                                h1 { text-align: center; margin-bottom: 30px; font-size: 20px; }
+                                pre { white-space: pre-wrap; font-family: inherit; }
+                              </style>
+                            </head>
+                            <body>
+                              <pre>${draftedContent}</pre>
+                            </body>
+                          </html>
+                        `);
+                        printWindow.document.close();
+                        printWindow.focus();
+                        printWindow.print();
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#111c38] hover:bg-[#1a2a4e] text-slate-200 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-[#dfba73]" />
+                    <span>طباعة / PDF</span>
+                  </button>
                 </div>
               )}
             </div>
